@@ -28,18 +28,18 @@ void DataBase::initDataBaseSlot(const QString &connectName,const QString &user, 
 
     if(db.open()){
         QSqlQuery query(db);
-        query.prepare(QString("CREATE TABLE `ZBYNS` (\
+        query.prepare(QString("CREATE TABLE `Lane` (\
                       `ID`  INTEGER PRIMARY KEY AUTOINCREMENT,\
                       `Timer`   TEXT,\
                       `Channel` INTEGER NOT NULL,\
-                      `Type`    INTEGER,\
-                      `Number`  TEXT,\
-                      `Check`   INTEGER,\
-                      `ImgFront`	TEXT,\
-                      `ImgFrontNumber`  TEXT,\
-                      `ImgAfter`    TEXT,\
-                      `ImgAfterNumber`  TEXT,\
-                      `Weight`  INTEGER\
+                      `Type` INTEGER NOT NULL,\
+                      `Plate`  TEXT,\
+                      `Color`   INTEGER,\
+                      `ImgPlate`	TEXT,\
+                      `TimerAfter`  TEXT,\
+                      `ImgAfterPlate`    TEXT,\
+                      `Department`  TEXT,\
+                      `Aging`  TEXT\
                   )"));
         if(!query.exec()){
                           qWarning().noquote()<<QString("Create table containers error<errorCode=%1>").arg(query.lastError().text());
@@ -47,7 +47,6 @@ void DataBase::initDataBaseSlot(const QString &connectName,const QString &user, 
                       else {
                           qInfo().noquote()<<QString("Create table Containers sucess");
                       }
-
                       query.clear();
     }
     else {
@@ -85,7 +84,7 @@ void DataBase::setDataBaseFilterSlot(const QString &filter)
         QScopedPointer<QSqlTableModel> model(new QSqlTableModel(this,db));
         //QSqlTableModel* model=new  QSqlTableModel(this,db);/* 在数据库界面已做删除 */
         qDebug().noquote()<<"Query database:"<<filter;
-        model->setTable(QString("ZBYNS"));
+        model->setTable(QString("Lane"));
         model->setFilter(filter);
         model->select();
         while (model->canFetchMore()) {
@@ -109,7 +108,7 @@ void DataBase::insertDataBaseSlot(QMap<QString, QString> data)
 
     if(db.open()){
         QScopedPointer<QSqlTableModel> model(new QSqlTableModel(this,db));
-        model->setTable(QString("ZBYNS"));
+        model->setTable(QString("Lane"));
         QSqlRecord record=model->record();
 
         foreach (auto key, data.keys()) {
@@ -140,7 +139,7 @@ void DataBase::updateDataBaseSlot(QMap<QString, QString> data)
 
     if(db.open()){
         QScopedPointer<QSqlTableModel> model(new QSqlTableModel(this,db));
-        model->setTable(QString("ZBYNS"));
+        model->setTable(QString("Lane"));
         model->setFilter(QString("Timer='%1' AND Channel='%2'").arg(data.value("Timer")).arg(data.value("Channel")));
         model->select();
         if(model->rowCount()==1){

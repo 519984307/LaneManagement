@@ -30,7 +30,12 @@
          <property name="font">
           <font>
            <pointsize>15</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
           </font>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
          <property name="readOnly">
           <bool>true</bool>
@@ -44,11 +49,17 @@
            <pointsize>20</pointsize>
           </font>
          </property>
+         <property name="autoFillBackground">
+          <bool>true</bool>
+         </property>
          <property name="frameShape">
           <enum>QFrame::Panel</enum>
          </property>
          <property name="text">
           <string>3</string>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
@@ -62,11 +73,17 @@
            <pointsize>20</pointsize>
           </font>
          </property>
+         <property name="autoFillBackground">
+          <bool>true</bool>
+         </property>
          <property name="frameShape">
           <enum>QFrame::Panel</enum>
          </property>
          <property name="text">
           <string>6</string>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
@@ -80,11 +97,17 @@
            <pointsize>20</pointsize>
           </font>
          </property>
+         <property name="autoFillBackground">
+          <bool>true</bool>
+         </property>
          <property name="frameShape">
           <enum>QFrame::Panel</enum>
          </property>
          <property name="text">
           <string>5</string>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
@@ -98,11 +121,17 @@
            <pointsize>20</pointsize>
           </font>
          </property>
+         <property name="autoFillBackground">
+          <bool>true</bool>
+         </property>
          <property name="frameShape">
           <enum>QFrame::Panel</enum>
          </property>
          <property name="text">
           <string>4</string>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
@@ -116,11 +145,17 @@
            <pointsize>20</pointsize>
           </font>
          </property>
+         <property name="autoFillBackground">
+          <bool>true</bool>
+         </property>
          <property name="frameShape">
           <enum>QFrame::Panel</enum>
          </property>
          <property name="text">
           <string>1</string>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
@@ -132,7 +167,12 @@
          <property name="font">
           <font>
            <pointsize>15</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
           </font>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
          <property name="readOnly">
           <bool>true</bool>
@@ -144,7 +184,12 @@
          <property name="font">
           <font>
            <pointsize>15</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
           </font>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
          <property name="readOnly">
           <bool>true</bool>
@@ -158,11 +203,17 @@
            <pointsize>20</pointsize>
           </font>
          </property>
+         <property name="autoFillBackground">
+          <bool>true</bool>
+         </property>
          <property name="frameShape">
           <enum>QFrame::Panel</enum>
          </property>
          <property name="text">
           <string>2</string>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
@@ -174,7 +225,12 @@
          <property name="font">
           <font>
            <pointsize>15</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
           </font>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
          <property name="readOnly">
           <bool>true</bool>
@@ -186,7 +242,12 @@
          <property name="font">
           <font>
            <pointsize>15</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
           </font>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
          <property name="readOnly">
           <bool>true</bool>
@@ -198,7 +259,12 @@
          <property name="font">
           <font>
            <pointsize>15</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
           </font>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
          <property name="readOnly">
           <bool>true</bool>

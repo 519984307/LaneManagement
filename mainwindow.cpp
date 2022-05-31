@@ -26,11 +26,19 @@ MainWindow::MainWindow(QWidget *parent)
     rHandle6=0;
 
     qRegisterMetaType<QtMsgType>("QtMsgType");
+    qRegisterMetaType<QMap<QString,QString>>("QMap<QString,QString>");
 
     pLog=QPointer<LogController>(new LogController("LaneManagement",this));
     connect(pLog.data(),SIGNAL(signal_newLogText(QtMsgType,QDateTime,QString)),&logFrom,SLOT(slotNewLogText(QtMsgType,QDateTime,QString)));
 
+    pDataBase=new DataBase(this);
+    connect(this,&MainWindow::signalInitDataBase,pDataBase,&DataBase::initDataBaseSlot);
+    connect(this,&MainWindow::signalInsertDataBase,pDataBase,&DataBase::insertDataBaseSlot);
+
     initParmeter();
+
+    emit signalInitDataBase("ZBYCS","sjzgjlg","sjzgjlg123","127.0.0.1",0);
+
     QtConcurrent::run(this,&MainWindow::initializingCamera);
 }
 
@@ -87,7 +95,7 @@ int MainWindow::PlateInfoCallBack(VzLPRClientHandle handle, void *pUserData, con
     QDateTime time= QDateTime::currentDateTime();
     QString y = time.toString("yyyy");
     QString m = time.toString("MM");
-    QString d = time.toString("d");
+    QString d = time.toString("dd");
     QDir dir(pThis->path);
     dir.mkdir(y);
     dir.cd(y);
@@ -96,11 +104,23 @@ int MainWindow::PlateInfoCallBack(VzLPRClientHandle handle, void *pUserData, con
     dir.mkdir(d);
     dir.cd(d);
 
-    char *buf = new char[1280*960];
-    VzLPRClient_ImageEncodeToJpeg(pImgFull,buf,1280*960,80);
+    char *buf = new char[1920*1080];
+    VzLPRClient_ImageEncodeToJpeg(pImgFull,buf,1920*1080,80);
+
+    QMap<QString,QString> dataMap;
+
+    dataMap.insert("Timer",time.toString("yyyy-MM-dd hh:mm:ss zzz"));
+    dataMap.insert("Channel",QString::number(pThis->handMap.key(handle)));
+    dataMap.insert("Type","-1");
+    dataMap.insert("Plate",QString::fromLocal8Bit(pResult->license));
+    dataMap.insert("Color",QString::fromLocal8Bit(pResult->color));
+    dataMap.insert("ImgPlate",QString("%1_%2.jpg").arg(time.toString("yyyyMMddhhmmss"),QString::fromLocal8Bit(pResult->license)));
+
+    emit pThis->signalInsertDataBase(dataMap);
+    dataMap.clear();
 
     QPixmap pix;
-    QByteArray arrImg(reinterpret_cast<const char*>(buf),1280*960);
+    QByteArray arrImg(reinterpret_cast<const char*>(buf),1920*1080);
     if(!arrImg.isEmpty()){
          pix.loadFromData(arrImg);
          pix.save(QString("%1/%2_%3.jpg").arg(dir.path(),time.toString("yyyyMMddhhmmss"),QString::fromLocal8Bit(pResult->license)),"JPEG");
@@ -108,52 +128,64 @@ int MainWindow::PlateInfoCallBack(VzLPRClientHandle handle, void *pUserData, con
 
     QPalette palette;
 
+    QString sheet="";
+    switch (pResult->nColor) {
+    case 0:
+        sheet="background-color: rgb(255, 0, 0);color: rgb(0, 0, 0);";
+        break;
+    case 1:
+        sheet="background-color: rgb(0, 143, 214);color: rgb(0, 0, 0);";
+        break;
+    case 2:
+        sheet="background-color: rgb(255, 255, 0);color: rgb(0, 0, 0);";
+        break;
+    case 5:
+        sheet="background-color: rgb(170, 255, 0);color: rgb(0, 0, 0);";
+        break;
+    case 6:
+        sheet="background-color: rgb(0, 143, 214);color: rgb(0, 0, 0);";
+        break;
+    case 8:
+        sheet="background-color: rgb(0, 0, 0);color: rgb(255, 255, 255);";
+        break;
+    default:
+        sheet="background-color: rgb(255, 0, 0);color: rgb(0, 0, 0);";
+    }
+
     switch (pThis->handMap.key(handle)) {
     case 1:
         pThis->ui->lineEdit->setText(QString::fromLocal8Bit(pResult->license));
-        if(pix.isNull()){
-            return 0;
-        }
+        pThis->ui->lineEdit->setStyleSheet(sheet);
         palette.setBrush(QPalette::Background, QBrush(pix.scaled(pThis->ui->label->size(), Qt::IgnoreAspectRatio)));
         pThis->ui->label->setPalette(palette);
         break;
     case 2:
+        pThis->ui->lineEdit_2->setStyleSheet(sheet);
         pThis->ui->lineEdit_2->setText(QString::fromLocal8Bit(pResult->license));
-        if(pix.isNull()){
-            return 0;
-        }
         palette.setBrush(QPalette::Background, QBrush(pix.scaled(pThis->ui->label_2->size(), Qt::IgnoreAspectRatio)));
         pThis->ui->label_2->setPalette(palette);
         break;
     case 3:
+        pThis->ui->lineEdit_3->setStyleSheet(sheet);
         pThis->ui->lineEdit_3->setText(QString::fromLocal8Bit(pResult->license));
-        if(pix.isNull()){
-            return 0;
-        }
         palette.setBrush(QPalette::Background, QBrush(pix.scaled(pThis->ui->label_3->size(), Qt::IgnoreAspectRatio)));
         pThis->ui->label_3->setPalette(palette);
         break;
     case 4:
+        pThis->ui->lineEdit_4->setStyleSheet(sheet);
         pThis->ui->lineEdit_4->setText(QString::fromLocal8Bit(pResult->license));
-        if(pix.isNull()){
-            return 0;
-        }
         palette.setBrush(QPalette::Background, QBrush(pix.scaled(pThis->ui->label_4->size(), Qt::IgnoreAspectRatio)));
         pThis->ui->label_4->setPalette(palette);
         break;
     case 5:
+        pThis->ui->lineEdit_5->setStyleSheet(sheet);
         pThis->ui->lineEdit_5->setText(QString::fromLocal8Bit(pResult->license));
-        if(pix.isNull()){
-            return 0;
-        }
         palette.setBrush(QPalette::Background, QBrush(pix.scaled(pThis->ui->label_5->size(), Qt::IgnoreAspectRatio)));
         pThis->ui->label_5->setPalette(palette);
         break;
     case 6:
+        pThis->ui->lineEdit_6->setStyleSheet(sheet);
         pThis->ui->lineEdit_6->setText(QString::fromLocal8Bit(pResult->license));
-        if(pix.isNull()){
-            return 0;
-        }
         palette.setBrush(QPalette::Background, QBrush(pix.scaled(pThis->ui->label_6->size(), Qt::IgnoreAspectRatio)));
         pThis->ui->label_6->setPalette(palette);
         break;
@@ -389,7 +421,7 @@ void MainWindow::on_actionDataBase_triggered()
     if(dataFrom && dataFrom->isVisible()){
         return;
     }
-    dataFrom= QSharedPointer<DataBaseForm>(new DataBaseForm(nullptr));
+    dataFrom= QSharedPointer<DataBaseForm>(new DataBaseForm(nullptr,path));
     dataFrom.data()->show();
 }
 

@@ -16,15 +16,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    #database.cpp \
+    database.cpp \
     databaseform.cpp \
+    filterdialog.cpp \
     logform.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    showdialog.cpp
 
 HEADERS += \
-    #database.h \
+    database.h \
     databaseform.h \
+    filterdialog.h \
     inc/VzClientSDK_CommonDefine.h \
     inc/VzClientSDK_FaceDefine.h \
     inc/VzClientSDK_LPDefine.h \
@@ -38,13 +41,16 @@ HEADERS += \
     inc/VzLPRParkClientSDK.h \
     inc/VzLPRRoadsiteClientSDK.h \
     logform.h \
-    mainwindow.h
+    mainwindow.h \
+    showdialog.h
 
 FORMS += \
     databaseform.ui \
+    filterdialog.ui \
     logform.ui \
     mainwindow.ui \
-    mainwindow.ui
+    mainwindow.ui \
+    showdialog.ui
 
 TRANSLATIONS += \
     LaneManagement_en_AS.ts

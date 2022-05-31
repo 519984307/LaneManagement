@@ -22,6 +22,7 @@
 #include "LogController/logcontroller.h"
 #include "logform.h"
 #include "databaseform.h"
+#include "database.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -59,6 +60,7 @@ public:
 
 
 private:
+
     Ui::MainWindow *ui;
     static MainWindow* pThis;    
     QComboBox* comboBox;
@@ -77,6 +79,11 @@ private:
     /// \brief pUserData 用户数据
     ///
     void *pUserData;
+
+    ///
+    /// \brief pDataBase 数据库处理类
+    ///
+    DataBase* pDataBase;
 
     ///
     /// \brief Log 日志类
@@ -121,6 +128,25 @@ private:
     /// \brief initializingCamera 初始化相机
     ///
     void initializingCamera();
+
+signals:
+
+    ///
+    /// \brief signalInitDataBase 初始化数据库.如果不存在,就创建.
+    /// \param connectName 链接名称
+    /// \param user 用户名
+    /// \param pass密码
+    /// \param ip 地址
+    /// \param dataBaseType 数据库类型
+    ///
+    void signalInitDataBase(const QString &connectName,const QString &user,const QString &pass,const QString &ip,const int &dataBaseType);
+
+    ///
+    /// \brief signalInsertDataBase 插入数据库
+    /// \param data
+    ///
+    void signalInsertDataBase(QMap<QString, QString> data);
+
 
 private slots:
 
