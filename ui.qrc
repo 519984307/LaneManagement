@@ -1,0 +1,18 @@
+<RCC>
+    <qresource prefix="/ui">
+        <file>ico/conect.png</file>
+        <file>ico/data.png</file>
+        <file>ico/debug.png</file>
+        <file>ico/diconect.png</file>
+        <file>ico/ICO.ico</file>
+        <file>ico/lock.png</file>
+        <file>ico/log.png</file>
+        <file>ico/setting.png</file>
+        <file>ico/show.png</file>
+        <file>ico/video.png</file>
+        <file>ico/车辆抓拍.png</file>
+        <file>ico/开闸.png</file>
+        <file>ico/登录.png</file>
+        <file>ico/摄像头_关闭.png</file>
+    </qresource>
+</RCC>
