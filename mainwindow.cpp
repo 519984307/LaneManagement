@@ -422,6 +422,8 @@ void MainWindow::on_actionDataBase_triggered()
         return;
     }
     dataFrom= QSharedPointer<DataBaseForm>(new DataBaseForm(nullptr,path));
+    connect(dataFrom.data(),SIGNAL(signalUpWhiteList(QMap<int,QMap<QString,QString>>)),this,SLOT(slotUpWhiteList(QMap<int,QMap<QString,QString>>)));
+    connect(dataFrom.data(),SIGNAL(signalUgWhiteList(QMap<int,QMap<QString,QString>>)),this,SLOT(slotUgWhiteList(QMap<int,QMap<QString,QString>>)));
     dataFrom.data()->show();
 }
 
@@ -487,5 +489,105 @@ void MainWindow::on_actionClose_triggered()
     }
     else {
         qWarning().noquote()<<QString("%1:Close video failed errCode<%2>").arg(par.at(0),QString::number(VzLPRClient_GetLastError()));
+    }
+}
+
+void MainWindow::slotUpWhiteList(QMap<int, QMap<QString, QString> > wlst)
+{
+    foreach(int id,wlst.keys()){
+
+        VZ_TM struTMEnable,struTMOverdule;
+
+        struTMEnable.nYear=QDate::currentDate().year();
+        struTMEnable.nMonth=QDate::currentDate().month();
+        struTMEnable.nMDay=QDate::currentDate().day();
+        struTMEnable.nHour=QTime::currentTime().hour();
+        struTMEnable.nMin=QTime::currentTime().minute();
+        struTMEnable.nSec=QTime::currentTime().second();
+
+        QDateTime TMOverdule=QDateTime::fromString(wlst.value(id).value("ValidTime","yyyy-MM-dd hh:mm:ss"));
+        struTMOverdule.nYear=TMOverdule.date().year();
+        struTMOverdule.nMonth=TMOverdule.date().month();
+        struTMOverdule.nMDay=TMOverdule.date().day();
+        struTMOverdule.nHour=TMOverdule.time().hour();
+        struTMOverdule.nMin=TMOverdule.time().minute();
+        struTMOverdule.nSec=TMOverdule.time().second();
+
+        VZ_LPR_WLIST_CUSTOMER* wlstCustomer=new VZ_LPR_WLIST_CUSTOMER();
+        wlstCustomer->uCustomerID=wlst.value(id).value("ID").toInt();
+        strcpy(wlstCustomer->strName,wlst.value(id).value("Name").toLocal8Bit().data());
+        strcpy(wlstCustomer->strCode,wlst.value(id).value("Department").toLocal8Bit().data());
+
+        VZ_LPR_WLIST_VEHICLE* wlistVehicle=new VZ_LPR_WLIST_VEHICLE();
+        wlistVehicle->uVehicleID=wlst.value(id).value("ID").toInt();
+        strcpy(wlistVehicle->strPlateID,wlst.value(id).value("Plate").toLocal8Bit().data());
+        wlistVehicle->uCustomerID=wlst.value(id).value("ID").toInt();
+        wlistVehicle->bEnable=wlst.value(id).value("Validity").toInt();
+        wlistVehicle->bEnableTMEnable=1;
+        wlistVehicle->bEnableTMOverdule=1;
+        wlistVehicle->struTMEnable=struTMEnable;
+        wlistVehicle->struTMOverdule=struTMOverdule;
+        wlistVehicle->bUsingTimeSeg=0;
+        wlistVehicle->bAlarm=wlst.value(id).value("Blacklist").toInt();
+
+        VZ_LPR_WLIST_IMPORT_RESULT wlistR;
+
+        VZ_LPR_WLIST_ROW* wlistRow=new VZ_LPR_WLIST_ROW();
+        wlistRow->pCustomer = wlstCustomer;
+        wlistRow->pVehicle = wlistVehicle;
+
+
+        foreach(auto hand,handMap.values()){
+            if(0==VzLPRClient_WhiteListImportRows(hand,1,wlistRow,&wlistR)){
+                qInfo().noquote()<<QString("%2:The whitelist was uploaded successfully. Procedure<%1>").arg(wlst.value(id).value("Plate"),CameraParmenterMap.value(handMap.key(hand)).at(0));
+            }
+            else {
+                qWarning()<<QString("%1-%2:The whitelist was uploaded successfully. Procedure<errCode=%3>").arg(CameraParmenterMap.value(handMap.key(hand)).at(0),wlst.value(id).value("Plate"),QString::number(VzLPRClient_GetLastError()));
+            }
+        }
+    }
+}
+
+void MainWindow::slotUgWhiteList(QMap<int, QMap<QString, QString> > wlst)
+{
+    foreach(int id,wlst.keys()){
+
+        VZ_TM struTMEnable,struTMOverdule;
+
+        struTMEnable.nYear=QDate::currentDate().year();
+        struTMEnable.nMonth=QDate::currentDate().month();
+        struTMEnable.nMDay=QDate::currentDate().day();
+        struTMEnable.nHour=QTime::currentTime().hour();
+        struTMEnable.nMin=QTime::currentTime().minute();
+        struTMEnable.nSec=QTime::currentTime().second();
+
+        QDateTime TMOverdule=QDateTime::fromString(wlst.value(id).value("ValidTime"),"yyyy-MM-dd hh:mm:ss");
+        struTMOverdule.nYear=TMOverdule.date().year();
+        struTMOverdule.nMonth=TMOverdule.date().month();
+        struTMOverdule.nMDay=TMOverdule.date().day();
+        struTMOverdule.nHour=TMOverdule.time().hour();
+        struTMOverdule.nMin=TMOverdule.time().minute();
+        struTMOverdule.nSec=TMOverdule.time().second();
+
+        VZ_LPR_WLIST_VEHICLE* wlistVehicle=new VZ_LPR_WLIST_VEHICLE();
+        wlistVehicle->uVehicleID=wlst.value(id).value("ID").toInt();
+        strcpy(wlistVehicle->strPlateID,wlst.value(id).value("Plate").toLocal8Bit().data());
+        wlistVehicle->uCustomerID=wlst.value(id).value("ID").toInt();
+        wlistVehicle->bEnable=wlst.value(id).value("Validity").toInt();
+        wlistVehicle->bEnableTMEnable=1;
+        wlistVehicle->bEnableTMOverdule=1;
+        wlistVehicle->struTMEnable=struTMEnable;
+        wlistVehicle->struTMOverdule=struTMOverdule;
+        wlistVehicle->bUsingTimeSeg=0;
+        wlistVehicle->bAlarm=wlst.value(id).value("Blacklist").toInt();
+
+        foreach(auto hand,handMap.values()){
+            if(0==VzLPRClient_WhiteListUpdateVehicleByCode(hand,wlistVehicle)){
+                qInfo().noquote()<<QString("%2:The whitelist was upgrade successfully. Procedure<%1>").arg(wlst.value(id).value("Plate"),CameraParmenterMap.value(handMap.key(hand)).at(0));
+            }
+            else {
+                qWarning()<<QString("%1-%2:The whitelist was upgrade successfully. Procedure<errCode=%3>").arg(CameraParmenterMap.value(handMap.key(hand)).at(0),wlst.value(id).value("Plate"),QString::number(VzLPRClient_GetLastError()));
+            }
+        }
     }
 }

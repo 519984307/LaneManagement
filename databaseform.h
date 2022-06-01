@@ -17,10 +17,14 @@
 #include <QFile>
 #include <QThread>
 #include <QLabel>
+#include <QSharedPointer>
+#include <QScopedPointer>
+#include <QMessageBox>
 
 #include "filterdialog.h"
 #include "database.h"
 #include "showdialog.h"
+#include "adddialog.h"
 
 namespace Ui {
 class DataBaseForm;
@@ -41,8 +45,36 @@ private slots:
 
     void on_pushButton_3_clicked();
 
+    void on_pushButton_2_clicked();
+
+    void on_pushButton_4_clicked();
+
+    void on_pushButton_6_clicked();
+
+    void on_pushButton_5_clicked();
+
+    void on_pushButton_7_clicked();
+
+    void on_pushButton_8_clicked();
+
 private:
+
     Ui::DataBaseForm *ui;
+
+    ///
+    /// \brief model 白名单数据模型对象
+    ///
+    QSharedPointer<QSqlTableModel> model;
+
+    ///
+    /// \brief db 白名单数据库对象
+    ///
+    QSqlDatabase db;
+
+    ///
+    /// \brief whiteState 白名单动作状态，过滤显示图片功能
+    ///
+    bool whiteState;
 
     ///
     /// \brief path 图片路径
@@ -92,6 +124,16 @@ signals:
     ///
     void signalShowPic(QString path);
 
+    ///
+    /// \brief signalUpWhiteList 上传白名单
+    ///
+    void signalUpWhiteList(QMap<int,QMap<QString,QString>>);
+
+    ///
+    /// \brief signalUpWhiteList 更新名单
+    ///
+    void signalUgWhiteList(QMap<int,QMap<QString,QString>>);
+
 public slots:
 
     /*****************************
@@ -103,6 +145,12 @@ public slots:
     /// \param model 数据模型
     ///
     void slot_returnModel(QSqlTableModel *ml);
+
+    ///
+    /// \brief slotAddItem 添加数据
+    /// \param item
+    ///
+    void slotAddItem(QMap<QString, QString> item);
 
     ///
     /// \brief slot_statisticalData

@@ -16,6 +16,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    adddialog.cpp \
     database.cpp \
     databaseform.cpp \
     filterdialog.cpp \
@@ -25,6 +26,7 @@ SOURCES += \
     showdialog.cpp
 
 HEADERS += \
+    adddialog.h \
     database.h \
     databaseform.h \
     filterdialog.h \
@@ -45,6 +47,7 @@ HEADERS += \
     showdialog.h
 
 FORMS += \
+    adddialog.ui \
     databaseform.ui \
     filterdialog.ui \
     logform.ui \

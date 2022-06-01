@@ -19,6 +19,9 @@
 #include <QtConcurrent>
 
 #include "inc/VzLPRClientSDK.h"
+#include "inc/VzLPRClientSDK_WhiteListDefine.h"
+#include "inc/VzLPRClientSDK_WhiteList.h"
+
 #include "LogController/logcontroller.h"
 #include "logform.h"
 #include "databaseform.h"
@@ -157,5 +160,15 @@ private slots:
     void on_actionPlay_triggered();
     void on_actionLogin_triggered();
     void on_actionClose_triggered();
+
+    ///
+    /// \brief slotUpWhiteList 上传白名单
+    ///
+    void slotUpWhiteList(QMap<int,QMap<QString,QString>> wlst);
+
+    ///
+    /// \brief slotUgWhiteList 更新白名单
+    ///
+    void slotUgWhiteList(QMap<int,QMap<QString,QString>> wlst);
 };
 #endif // MAINWINDOW_H

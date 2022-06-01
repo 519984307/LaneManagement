@@ -14,29 +14,23 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="3">
-    <widget class="QPushButton" name="pushButton_2">
+   <item row="1" column="8">
+    <widget class="QPushButton" name="pushButton_7">
      <property name="minimumSize">
       <size>
        <width>0</width>
        <height>32</height>
       </size>
      </property>
-     <property name="autoFillBackground">
-      <bool>true</bool>
-     </property>
      <property name="text">
-      <string>Import</string>
+      <string>Upload</string>
      </property>
     </widget>
    </item>
-   <item row="0" column="0" colspan="9">
+   <item row="0" column="0" colspan="11">
     <widget class="QTableView" name="tableView">
      <property name="autoFillBackground">
       <bool>true</bool>
-     </property>
-     <property name="editTriggers">
-      <set>QAbstractItemView::NoEditTriggers</set>
      </property>
      <property name="alternatingRowColors">
       <bool>false</bool>
@@ -58,18 +52,21 @@
      </attribute>
     </widget>
    </item>
-   <item row="1" column="0">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
+   <item row="1" column="7">
+    <widget class="QPushButton" name="pushButton_4">
+     <property name="minimumSize">
       <size>
-       <width>113</width>
-       <height>20</height>
+       <width>0</width>
+       <height>32</height>
       </size>
      </property>
-    </spacer>
+     <property name="autoFillBackground">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Edit</string>
+     </property>
+    </widget>
    </item>
    <item row="1" column="1">
     <widget class="QPushButton" name="pushButton">
@@ -88,22 +85,6 @@
     </widget>
    </item>
    <item row="1" column="6">
-    <widget class="QPushButton" name="pushButton_5">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>32</height>
-      </size>
-     </property>
-     <property name="autoFillBackground">
-      <bool>true</bool>
-     </property>
-     <property name="text">
-      <string>Del</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="7">
     <widget class="QPushButton" name="pushButton_6">
      <property name="minimumSize">
       <size>
@@ -111,16 +92,13 @@
        <height>32</height>
       </size>
      </property>
-     <property name="autoFillBackground">
-      <bool>true</bool>
-     </property>
      <property name="text">
-      <string>Edit</string>
+      <string>Delete</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="8">
-    <spacer name="horizontalSpacer_2">
+   <item row="1" column="0">
+    <spacer name="horizontalSpacer">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -133,18 +111,35 @@
     </spacer>
    </item>
    <item row="1" column="5">
-    <widget class="QPushButton" name="pushButton_4">
+    <widget class="QPushButton" name="pushButton_5">
      <property name="minimumSize">
       <size>
        <width>0</width>
        <height>32</height>
       </size>
      </property>
-     <property name="autoFillBackground">
-      <bool>true</bool>
-     </property>
      <property name="text">
       <string>Add</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="10">
+    <spacer name="horizontalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>113</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="1" column="3">
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
      </property>
     </widget>
    </item>
@@ -161,6 +156,35 @@
      </property>
      <property name="text">
       <string>Export</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="4">
+    <widget class="QPushButton" name="pushButton_2">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="autoFillBackground">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>WhiteList</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="9">
+    <widget class="QPushButton" name="pushButton_8">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>Update</string>
      </property>
     </widget>
    </item>
