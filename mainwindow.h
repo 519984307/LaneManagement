@@ -16,16 +16,17 @@
 #include <QScopedPointer>
 #include <QBrush>
 #include <QPixmap>
-#include <QtConcurrent>
+#include <QCloseEvent>
 
-#include "inc/VzLPRClientSDK.h"
-#include "inc/VzLPRClientSDK_WhiteListDefine.h"
-#include "inc/VzLPRClientSDK_WhiteList.h"
+#include <QReadWriteLock>
 
 #include "LogController/logcontroller.h"
 #include "logform.h"
 #include "databaseform.h"
 #include "database.h"
+#include "platecl.h"
+#include "lockdialog.h"
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -39,49 +40,27 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    ///
-    /// \brief CommonNotityCallBack 通用回调函数
-    /// \param handle
-    /// \param pUserData
-    /// \param eNotify
-    /// \param pStrDetail
-    ///
-    static void CommonNotityCallBack(VzLPRClientHandle handle, void *pUserData, VZ_LPRC_COMMON_NOTIFY eNotify, const char *pStrDetail);
-
-    ///
-    /// \brief PlateInfoCallBack 车牌结果回调函数
-    /// \param handle
-    /// \param pUserData
-    /// \param pResult
-    /// \param uNumPlates
-    /// \param eResultType
-    /// \param pImgFull
-    /// \param pImgPlateClip
-    /// \return
-    ///
-    static int PlateInfoCallBack(VzLPRClientHandle handle, void *pUserData, const TH_PlateResult *pResult, unsigned  uNumPlates, VZ_LPRC_RESULT_TYPE  eResultType, const VZ_LPRC_IMAGE_INFO  *pImgFull, const VZ_LPRC_IMAGE_INFO  *pImgPlateClip);
-
+    void closeEvent(QCloseEvent *event)Q_DECL_OVERRIDE;
 
 private:
 
     Ui::MainWindow *ui;
-    static MainWindow* pThis;    
     QComboBox* comboBox;
 
     ///
-    /// \brief ret 初始化状态
+    /// \brief imgPath 图片路径
     ///
-    int ret;
+    QString imgPath;
+
+    ///
+    /// \brief PL 车牌处理类
+    ///
+    QSharedPointer<PlateCL> plateC;
 
     ///
     /// \brief logFrom 日志页面
     ///
     LogForm logFrom;
-
-    ///
-    /// \brief pUserData 用户数据
-    ///
-    void *pUserData;
 
     ///
     /// \brief pDataBase 数据库处理类
@@ -99,38 +78,48 @@ private:
     QSharedPointer<DataBaseForm> dataFrom;
 
     ///
-    /// \brief cameraPort 相机端口
+    /// \brief cameraPar 相机参数
     ///
-    int cameraPort;
-
-    QString addr1,addr2,addr3,addr4,addr5,addr6;
-    QString user1,user2,user3,user4,user5,user6;
-    QString poww1,poww2,poww3,poww4,poww5,poww6;
-
-    QMap<int,QStringList> CameraParmenterMap;
-
-    int handle1,handle2,handle3,handle4,handle5,handle6;
-    int rHandle1,rHandle2,rHandle3,rHandle4,rHandle5,rHandle6;
-
-    QMap<int,VzLPRClientHandle> handMap;
-    QMap<int,VzLPRClientHandle> rHandMap;
-
+    QMap<int,QStringList> cameraPar;
+    
+    ///
+    /// \brief winIDMap 视频播放句柄
+    ///
     QMap<int,WId> winIDMap;
 
     ///
-    /// \brief path 图片路径
+    /// \brief timerMap 定时恢复显示屏定时器组
     ///
-    QString path;
+    QMap<int,QTimer*> timerMap;
 
+    ///
+    /// \brief db 白名单数据库对象
+    ///
+    QSqlDatabase db;
+
+    ///
+    /// \brief locker
+    ///
+    QReadWriteLock locker;
+              
     ///
     /// \brief initParmeter 初始化参数
     ///
     void initParmeter();
 
     ///
-    /// \brief initializingCamera 初始化相机
+    /// \brief send485Data 485透明传输
+    /// \param msg
     ///
-    void initializingCamera();
+    void sendRs485Data(QString plate, int channel);
+
+    /*****************************
+    * @brief:字符串转换16进制
+    ******************************/
+    void formatString(QString &org, int n, const QChar &ch);
+    QByteArray hexStringtoByteArray(QString hex);
+    QByteArray strToHex(QString str);
+    QByteArray bgkToHex(QString str);
 
 signals:
 
@@ -149,7 +138,18 @@ signals:
     /// \param data
     ///
     void signalInsertDataBase(QMap<QString, QString> data);
+    
+    ///
+    /// \brief signalPushShow 推送车牌显示
+    /// \param msg
+    ///
+    void signalPushShow(int hand ,QByteArray arr,int type);
 
+    ///
+    /// \brief signalDoSomething 操作相机指令
+    /// \param channel
+    ///
+    void signalDoSomething(int channel,int type, quintptr Wid);
 
 private slots:
 
@@ -160,15 +160,21 @@ private slots:
     void on_actionPlay_triggered();
     void on_actionLogin_triggered();
     void on_actionClose_triggered();
+    void on_actionSetting_triggered();
+
+    
+    ///
+    /// \brief slotPlateResult 车牌结果
+    /// \param channel
+    /// \param plate
+    /// \param color
+    ///
+    void slotPlateResult(int channel, QString plate, int color, QByteArray imgArr);
 
     ///
-    /// \brief slotUpWhiteList 上传白名单
+    /// \brief slotResumeShows 定时恢复默认显示
     ///
-    void slotUpWhiteList(QMap<int,QMap<QString,QString>> wlst);
-
-    ///
-    /// \brief slotUgWhiteList 更新白名单
-    ///
-    void slotUgWhiteList(QMap<int,QMap<QString,QString>> wlst);
+    void slotResumeShows();
+    void on_actionLock_triggered();
 };
 #endif // MAINWINDOW_H

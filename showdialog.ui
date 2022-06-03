@@ -6,12 +6,16 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>588</width>
-    <height>593</height>
+    <width>1280</width>
+    <height>960</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Picture</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="ui.qrc">
+    <normaloff>:/ui/ico/ICO.ico</normaloff>:/ui/ico/ICO.ico</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -35,6 +39,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="ui.qrc"/>
+ </resources>
  <connections/>
 </ui>

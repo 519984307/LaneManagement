@@ -11,7 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Log</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="ui.qrc">
+    <normaloff>:/ui/ico/ICO.ico</normaloff>:/ui/ico/ICO.ico</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0" colspan="2">
@@ -39,6 +43,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="ui.qrc"/>
+ </resources>
  <connections/>
 </ui>

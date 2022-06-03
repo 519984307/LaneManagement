@@ -20,9 +20,11 @@ SOURCES += \
     database.cpp \
     databaseform.cpp \
     filterdialog.cpp \
+    lockdialog.cpp \
     logform.cpp \
     main.cpp \
     mainwindow.cpp \
+    platecl.cpp \
     showdialog.cpp
 
 HEADERS += \
@@ -42,14 +44,17 @@ HEADERS += \
     inc/VzLPRFaceClientSDK.h \
     inc/VzLPRParkClientSDK.h \
     inc/VzLPRRoadsiteClientSDK.h \
+    lockdialog.h \
     logform.h \
     mainwindow.h \
+    platecl.h \
     showdialog.h
 
 FORMS += \
     adddialog.ui \
     databaseform.ui \
     filterdialog.ui \
+    lockdialog.ui \
     logform.ui \
     mainwindow.ui \
     mainwindow.ui \
@@ -63,20 +68,18 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-DISTFILES +=
+DISTFILES += \
+    res.rc
 
 RESOURCES += \
     ui.qrc
+
+RC_FILE = res.rc
 
 MOC_DIR=tmp/moc
 RCC_DIR=tmp/rcc
 UI_DIR=tmp/ui
 OBJECTS_DIR=tmp/obj
-
-unix:!macx|win32: LIBS += -L$$PWD/lib/ -lVzLPRSDK
-
-INCLUDEPATH += $$PWD/.
-DEPENDPATH += $$PWD/.
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/LogController/ -lCc1_Logging
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/LogController/ -lCc1_Logging
@@ -84,3 +87,13 @@ else:unix:!macx: LIBS += -L$$PWD/LogController/ -lCc1_Logging
 
 INCLUDEPATH += $$PWD/LogController/release
 DEPENDPATH += $$PWD/LogController/release
+
+win32: LIBS += -L$$PWD/lib/ -lVzLPRSDK
+
+INCLUDEPATH += $$PWD/.
+DEPENDPATH += $$PWD/.
+
+#win32: LIBS += -L$$PWD/SDK32/lib/ -lVzLPRSDK
+
+#INCLUDEPATH += $$PWD/SDK32
+#DEPENDPATH += $$PWD/SDK32

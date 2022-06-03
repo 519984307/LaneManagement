@@ -177,25 +177,50 @@ void DataBaseForm::on_pushButton_2_clicked()
 
 }
 
-void DataBaseForm::on_pushButton_4_clicked()
-{
-    model->database().transaction();
-    if(model->submitAll()){
-        model->database().commit();
-    }
-    else {
-        model->database().rollback();
-    }
-}
-
+/*****************************
+* @brief:删除数据
+******************************/
 void DataBaseForm::on_pushButton_6_clicked()
 {
-    int curRow=ui->tableView->currentIndex().row();
-    model->removeRow(curRow);
+    if(!model){
+        return;
+    }
+
+    QMap<int,QMap<QString,QString>> wlst_vehicle;
+
+    int row=index.row();
+    int col = ui->tableView->model()->columnCount();
+
+    //添加列标题
+    QStringList HeaderRow;
+    for (int i = 0; i < col; i++)
+    {
+        HeaderRow.append(ui->tableView->model()->headerData(i, Qt::Horizontal, Qt::DisplayRole).toString());
+    }
+
+    int ID = -1;
+    QMap<QString,QString> var;
+    for (int j = 0; j < col; j++){
+        QModelIndex index = ui->tableView->model()->index(row, j);
+        if(j==0){
+            ID=ui->tableView->model()->data(index).toInt();
+        }
+        else {
+            var.insert(HeaderRow.at(j),ui->tableView->model()->data(index).toString());
+        }
+    }
+    wlst_vehicle.insert(ID,var);
+
+    model->removeRow(row);
     model->submitAll();
     model->select();
+
+    emit signalDeWhiteList(wlst_vehicle);
 }
 
+/*****************************
+* @brief:添加数据
+******************************/
 void DataBaseForm::on_pushButton_5_clicked()
 {
     QSharedPointer<AddDialog> Dlg=QSharedPointer<AddDialog>(new AddDialog(this));
@@ -205,7 +230,12 @@ void DataBaseForm::on_pushButton_5_clicked()
 
 void DataBaseForm::slotAddItem(QMap<QString,QString> item)
 {
+    if(!model){
+        return;
+    }
+
     QSqlRecord record=model->record();
+
     foreach (auto key, item.keys()) {
         record.setValue(key,item.value(key));
     }
@@ -217,10 +247,47 @@ void DataBaseForm::slotAddItem(QMap<QString,QString> item)
     }
     model->submitAll();
     model->select();
+
+    //row = ui->tableView->model()->rowCount();
+
+
+    QMap<int,QMap<QString,QString>> wlst_vehicle;
+
+    int row = ui->tableView->model()->rowCount()-1;
+    int col = ui->tableView->model()->columnCount();
+
+    //添加列标题
+    QStringList HeaderRow;
+    for (int i = 0; i < col; i++)
+    {
+        HeaderRow.append(ui->tableView->model()->headerData(i, Qt::Horizontal, Qt::DisplayRole).toString());
+    }
+
+    int ID = -1;
+    QMap<QString,QString> var;
+    for (int j = 0; j < col; j++){
+        QModelIndex index = ui->tableView->model()->index(row, j);
+        if(j==0){
+            ID=ui->tableView->model()->data(index).toInt();
+        }
+        else {
+            var.insert(HeaderRow.at(j),ui->tableView->model()->data(index).toString());
+        }
+    }
+    wlst_vehicle.insert(ID,var);
+
+    emit signalUpWhiteList(wlst_vehicle);
 }
 
+/*****************************
+* @brief:上传白名单
+******************************/
 void DataBaseForm::on_pushButton_7_clicked()
 {
+    if(!model){
+        return;
+    }
+
     QMap<int,QMap<QString,QString>> wlst_vehicle;
 
     int row = ui->tableView->model()->rowCount();
@@ -251,17 +318,24 @@ void DataBaseForm::on_pushButton_7_clicked()
     emit signalUpWhiteList(wlst_vehicle);
 }
 
-void DataBaseForm::on_pushButton_8_clicked()
+/*****************************
+* @brief:编辑数据
+******************************/
+void DataBaseForm::on_pushButton_4_clicked()
 {
-    int row = ui->tableView->currentIndex().row();
-    if(row<0){
-        QMessageBox::warning(this,"Warning","Please select the data item to update");
+    model->database().transaction();
+    if(model->submitAll()){
+        model->database().commit();
     }
+    else {
+        model->database().rollback();
+    }
+
     int col = ui->tableView->model()->columnCount();
+    int row = index.row();
 
     QMap<int,QMap<QString,QString>> wlst_vehicle;
 
-    //添加列标题
     QStringList HeaderRow;
     for (int i = 0; i < col; i++)
     {
@@ -282,4 +356,9 @@ void DataBaseForm::on_pushButton_8_clicked()
     wlst_vehicle.insert(ID,var);
 
     emit signalUgWhiteList(wlst_vehicle);
+}
+
+void DataBaseForm::on_tableView_clicked(const QModelIndex &index)
+{
+    this->index=index;
 }

@@ -47,15 +47,15 @@ private slots:
 
     void on_pushButton_2_clicked();
 
-    void on_pushButton_4_clicked();
-
     void on_pushButton_6_clicked();
 
     void on_pushButton_5_clicked();
 
     void on_pushButton_7_clicked();
 
-    void on_pushButton_8_clicked();
+    void on_pushButton_4_clicked();
+
+    void on_tableView_clicked(const QModelIndex &index);
 
 private:
 
@@ -100,6 +100,11 @@ private:
         Aging=10
     };
 
+    ///
+    /// \brief index 选中项
+    ///
+    QModelIndex index;
+
 signals:
 
     ///
@@ -133,6 +138,11 @@ signals:
     /// \brief signalUpWhiteList 更新名单
     ///
     void signalUgWhiteList(QMap<int,QMap<QString,QString>>);
+
+    ///
+    /// \brief signalDeWhiteList 删除白名单
+    ///
+    void signalDeWhiteList(QMap<int,QMap<QString,QString>>);
 
 public slots:
 
