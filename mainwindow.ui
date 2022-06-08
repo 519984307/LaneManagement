@@ -306,6 +306,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionPostWhilte"/>
    <addaction name="actionSetting"/>
    <addaction name="actionDataBase"/>
    <addaction name="actionLog"/>
@@ -396,6 +397,15 @@
    </property>
    <property name="text">
     <string>Close</string>
+   </property>
+  </action>
+  <action name="actionPostWhilte">
+   <property name="icon">
+    <iconset resource="ui.qrc">
+     <normaloff>:/ui/ico/云下载.png</normaloff>:/ui/ico/云下载.png</iconset>
+   </property>
+   <property name="text">
+    <string>PostWhilte</string>
    </property>
   </action>
  </widget>

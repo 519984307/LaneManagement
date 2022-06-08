@@ -14,5 +14,6 @@
         <file>ico/开闸.png</file>
         <file>ico/登录.png</file>
         <file>ico/摄像头_关闭.png</file>
+        <file>ico/云下载.png</file>
     </qresource>
 </RCC>

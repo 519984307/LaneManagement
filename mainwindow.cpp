@@ -25,6 +25,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(plateC.data(),&PlateCL::signalPlateResult,this,&MainWindow::slotPlateResult);
     connect(this,&MainWindow::signalPushShow,plateC.data(),&PlateCL::slotPushShow);
     connect(this,&MainWindow::signalDoSomething,plateC.data(),&PlateCL::slotDoSomething);
+
+
+    postDa=new PostData(this);
+    connect(this,&MainWindow::signalPostData,postDa,&PostData::slotPostData);
+    //audioS=new AudioServer(this);
 }
 
 MainWindow::~MainWindow()
@@ -41,6 +46,46 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
     else {
         event->ignore();
+    }
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event)
+{
+    Q_UNUSED(event);
+    foreach(auto key,imgArrMap.keys()){
+        QPixmap pix;
+        if(!imgArrMap.value(key).isEmpty()){
+             pix.loadFromData(imgArrMap.value(key));
+        }
+        QPalette palette;
+
+        switch (key) {
+        case 1:
+            palette.setBrush(QPalette::Background, QBrush(pix.scaled(ui->label->size(), Qt::IgnoreAspectRatio)));
+            ui->label->setPalette(palette);
+            break;
+        case 2:
+            palette.setBrush(QPalette::Background, QBrush(pix.scaled(ui->label_2->size(), Qt::IgnoreAspectRatio)));
+            ui->label_2->setPalette(palette);
+            break;
+        case 3:
+            palette.setBrush(QPalette::Background, QBrush(pix.scaled(ui->label_3->size(), Qt::IgnoreAspectRatio)));
+            ui->label_3->setPalette(palette);
+            break;
+        case 4:
+            palette.setBrush(QPalette::Background, QBrush(pix.scaled(ui->label_4->size(), Qt::IgnoreAspectRatio)));
+            ui->label_4->setPalette(palette);
+            break;
+        case 5:
+            palette.setBrush(QPalette::Background, QBrush(pix.scaled(ui->label_5->size(), Qt::IgnoreAspectRatio)));
+            ui->label_5->setPalette(palette);
+            break;
+        case 6:
+            palette.setBrush(QPalette::Background, QBrush(pix.scaled(ui->label_6->size(), Qt::IgnoreAspectRatio)));
+            ui->label_6->setPalette(palette);
+            break;
+        }
+
     }
 }
 
@@ -230,6 +275,7 @@ void MainWindow::on_actionClose_triggered()
 void MainWindow::on_actionSetting_triggered()
 {
     sendRs485Data(QString::fromLocal8Bit("冀A93JT0"),this->comboBox->currentIndex()+1);
+    slotPlateResult(1,"粤B050CS",0,nullptr);
 }
 
 void MainWindow::slotPlateResult(int channel, QString plate, int color,QByteArray imgArr)
@@ -265,6 +311,11 @@ void MainWindow::slotPlateResult(int channel, QString plate, int color,QByteArra
     if(!imgArr.isEmpty()){
          pix.loadFromData(imgArr);
          pix.save(QString("%1/%2_%3.jpg").arg(dir.path(),time.toString("yyyyMMddhhmmss"),plate),"JPEG");
+
+         /*****************************
+        * @brief:重绘使用
+        ******************************/
+         imgArrMap.insert(channel,imgArr);
     }
 
     QPalette palette;
@@ -298,7 +349,7 @@ void MainWindow::slotPlateResult(int channel, QString plate, int color,QByteArra
         ui->lineEdit->setText(plate);
         ui->lineEdit->setStyleSheet(sheet);
         palette.setBrush(QPalette::Background, QBrush(pix.scaled(ui->label->size(), Qt::IgnoreAspectRatio)));
-        ui->label->setPalette(palette);
+        ui->label->setPalette(palette);        
         break;
     case 2:
         ui->lineEdit_2->setStyleSheet(sheet);
@@ -331,7 +382,27 @@ void MainWindow::slotPlateResult(int channel, QString plate, int color,QByteArra
         ui->label_6->setPalette(palette);
         break;
     }
-    
+
+    QJsonDocument jsonDoc;
+    QJsonObject jsonObj1,jsonObj2;
+
+    jsonObj1.insert("action", "InOutAction");
+    jsonObj1.insert("method", "Verification");
+    jsonObj1.insert("service", "container");
+
+    jsonObj2.insert("currentDate",time.toString("yyyy-MM-dd hh:mm:ss"));
+    jsonObj2.insert("doorNumber","02");
+    jsonObj2.insert("laneNumber",QString("%1").arg(channel,2,10,QLatin1Char('0')));
+    jsonObj2.insert("goodsType",0);
+    jsonObj2.insert("carNumber",QString::fromLocal8Bit("粤B050CS"));
+    jsonObj2.insert("goodsList","WDFU7652013");
+
+    jsonObj1.insert("dto",QJsonValue(jsonObj2));
+
+    jsonDoc.setObject(jsonObj1);
+    qDebug()<<jsonDoc.toJson(QJsonDocument::Compact);
+    emit signalPostData(jsonDoc.toJson(QJsonDocument::Compact));
+
     ///
     /// \brief sendRs485Data 推送车牌数据到显示屏
     ///
@@ -391,18 +462,33 @@ void MainWindow::sendRs485Data(QString plate,int channel)
     QString msgR="";
     QStringList msgList;
 
+    bool isWg=false;
+
     if(isRecord && Validity){
         if(Blacklist){
             msgList.append(bg);
         }
         else
-        {
+        {            
+            isWg=true;
             msgList.append(wg);
+
+            /*****************************
+            * @brief:白名单抬杆
+            ******************************/
+            emit signalDoSomething(channel,1,0);
         }
     }
     else
     {
         msgList.append(lg);
+    }
+
+    /*****************************
+    * @brief:相机不参与抬杆，直接通过软件抬杆。临时车辆出闸直接方行，数据库没有启用的数据也不抬杆
+    ******************************/
+    if(!isWg && !Blacklist && !isRecord && channel<=3){
+        emit signalDoSomething(channel,1,0);
     }
 
     msgList.append(plate);

@@ -348,12 +348,12 @@ void PlateCL::slotPushShow(int channel, QByteArray arr,int type)
 
         QByteArray arr;
 
-        if(channel<4){
-            arr=msgIN.toLatin1();
+        if(channel<=3){
+            arr=msgOUT.toLatin1();
             arr=hexStringtoByteArray(arr);
         }
         else {
-            arr=msgOUT.toLatin1();
+            arr=msgIN.toLatin1();
             arr=hexStringtoByteArray(arr);
         }
         int rec= VzLPRClient_SerialStart(pThis->handMap.value(channel),0,nullptr,nullptr);

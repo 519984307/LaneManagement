@@ -17,6 +17,7 @@
 #include <QBrush>
 #include <QPixmap>
 #include <QCloseEvent>
+#include <QResizeEvent>
 
 #include <QReadWriteLock>
 
@@ -26,6 +27,9 @@
 #include "database.h"
 #include "platecl.h"
 #include "lockdialog.h"
+
+//#include "audioserver.h"
+#include "postdata.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -41,11 +45,16 @@ public:
     ~MainWindow();
 
     void closeEvent(QCloseEvent *event)Q_DECL_OVERRIDE;
+    void resizeEvent(QResizeEvent* event)Q_DECL_OVERRIDE;
 
 private:
 
     Ui::MainWindow *ui;
     QComboBox* comboBox;
+
+    //AudioServer* audioS;
+
+    PostData* postDa;
 
     ///
     /// \brief imgPath 图片路径
@@ -101,6 +110,11 @@ private:
     /// \brief locker
     ///
     QReadWriteLock locker;
+
+    ///
+    /// \brief imgArrMap 图片列表，供重绘使用
+    ///
+    QMap<int,QByteArray> imgArrMap;
               
     ///
     /// \brief initParmeter 初始化参数
@@ -150,6 +164,12 @@ signals:
     /// \param channel
     ///
     void signalDoSomething(int channel,int type, quintptr Wid);
+
+    ///
+    /// \brief signalPostData 请求数据
+    /// \param data
+    ///
+    void signalPostData(QByteArray data);
 
 private slots:
 

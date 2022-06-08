@@ -5,6 +5,7 @@
 #include <QScopedPointer>
 #include <QPalette>
 #include <QPixmap>
+#include <QResizeEvent>
 
 namespace Ui {
 class ShowDialog;
@@ -18,8 +19,12 @@ public:
     explicit ShowDialog(QWidget *parent = nullptr);
     ~ShowDialog();
 
+    void resizeEvent(QResizeEvent* event)Q_DECL_OVERRIDE;
+
 private:
     Ui::ShowDialog *ui;
+
+    QString imgPath;
 
 public slots:
 
