@@ -6,13 +6,14 @@
 #include <QNetworkReply>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QJsonArray>
 
 class PostData : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit PostData(QObject *parent = nullptr);
+    explicit PostData(QObject *parent = nullptr,QString httpAddr="");
     ~PostData();
 
     QNetworkAccessManager* pManager;
@@ -21,9 +22,13 @@ public:
     QJsonDocument doc;
     QUrl url;
 
-    QString remotePath;
-
 signals:
+
+    ///
+    /// \brief signalPlateWhite 拉去的白名单写入数据库
+    /// \param plateList
+    ///
+    void signalPlateWhite(QStringList plateList);
 
 private slots:
 

@@ -1,4 +1,4 @@
-#ifndef PLATECL_H
+﻿#ifndef PLATECL_H
 #define PLATECL_H
 
 #include <QObject>
@@ -75,6 +75,8 @@ private:
     ******************************/
     int rHandle1,rHandle2,rHandle3,rHandle4,rHandle5,rHandle6;
 
+    QList<int> handList;
+
     ///
     /// \brief handMap 登录句柄MAP
     ///
@@ -91,6 +93,12 @@ private:
     /// \brief initializingCamera 初始化相机
     ///
     void initializingCamera();    
+
+    ///
+    /// \brief loginCamera 登录相机
+    /// \param key
+    ///
+    void loginCamera(int key);
     
     ///
     /// \brief resumeShows 恢复显示屏默认显示
@@ -131,6 +139,12 @@ public slots:
     /// \param channel
     ///
     void slotDoSomething(int channel, int type, quintptr Wid);
+
+    ///
+    /// \brief slotSendAudio 发送车牌数据
+    /// \param data
+    ///
+    void slotSendAudio(int channel,QByteArray data);
     
 signals:
     

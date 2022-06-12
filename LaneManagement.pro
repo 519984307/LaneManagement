@@ -1,4 +1,4 @@
-QT += core gui sql concurrent network
+QT += core gui sql concurrent network #texttospeech
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -11,7 +11,7 @@ CONFIG += skip_target_version_ext
 
 QMAKE_TARGET_COPYRIGHT = "Copyright 2021 Shen zhen zhong bai yuan"
 
-VERSION = 1.0.0.1_2206082310
+VERSION = 1.0.0.2_2206121532
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -37,9 +37,12 @@ SOURCES += \
     mainwindow.cpp \
     platecl.cpp \
     postdata.cpp \
-    showdialog.cpp
+    showdialog.cpp \
+    tcpclient.cpp \
+    tcpserver.cpp
 
 HEADERS += \
+    DataInterRequest/datainterchangeinterface.h \
     adddialog.h \
     #audioserver.h \
     avdioserverform.h \
@@ -63,7 +66,9 @@ HEADERS += \
     mainwindow.h \
     platecl.h \
     postdata.h \
-    showdialog.h
+    showdialog.h \
+    tcpclient.h \
+    tcpserver.h
 
 FORMS += \
     adddialog.ui \

@@ -1,19 +1,19 @@
 #include "postdata.h"
 
-PostData::PostData(QObject *parent) : QObject(parent)
+PostData::PostData(QObject *parent, QString httpAddr)
 {
     this->setParent(parent);
 
-//    QSslConfiguration config=QSslConfiguration::defaultConfiguration();
-//    config.setPeerVerifyMode(QSslSocket::VerifyNone);
-//    config.setProtocol(QSsl::TlsV1_1);
-//    request.setSslConfiguration(config);
+    if(httpAddr.indexOf("https")){
+        QSslConfiguration config=QSslConfiguration::defaultConfiguration();
+        config.setPeerVerifyMode(QSslSocket::VerifyNone);
+        config.setProtocol(QSsl::TlsV1_1);
+        request.setSslConfiguration(config);
+    }
+
     pManager=new QNetworkAccessManager (this);
-
     connect(pManager, SIGNAL(finished(QNetworkReply*)),this, SLOT(replyFinishedSlot(QNetworkReply*)));
-
-    //url.setPath( "http://61.182.236.74:8062/api/gateway");
-    request.setUrl(QUrl::fromEncoded("http://61.182.236.74:8062/api/gateway"));
+    request.setUrl(QUrl::fromEncoded(httpAddr.toUtf8()));
 }
 
 PostData::~PostData()
@@ -54,8 +54,34 @@ void PostData::slot_finished()
     }
 
     QByteArray arr=reply->readAll();
-    QString str=QString::fromUtf8(arr);
-    qDebug()<<str;
+    QJsonDocument doc =QJsonDocument::fromJson(arr);
+    if(!doc.isNull()){
+        QJsonObject obj=doc.object();
+        if(obj.contains("message")){
+            QJsonValue val=obj.value("message");
+            qInfo().noquote()<<QString("Pull the whitelist regularl:%1").arg(val.toString());
+        }
+        bool code=false;
+        if(obj.contains("code")){
+            QJsonValue val=obj.value("code");
+            if(val.toInt()==0){
+                code=true;
+            }
+        }
+        if(code && obj.contains("code")){
+            QJsonValue val=obj.value(QStringLiteral("data"));
+            QJsonArray valArr=val.toArray();
+
+            QStringList plateList;
+
+            for(int i=0;i<valArr.size();i++){
+                QJsonValue tmpVal=valArr.at(i);
+                QJsonObject tmpObj=tmpVal.toObject();
+                plateList.append(tmpObj.value("carNumber").toString());
+            }
+            emit signalPlateWhite(plateList);
+        }
+    }
 
     reply->abort();
     reply->close();
@@ -64,11 +90,6 @@ void PostData::slot_finished()
 
 void PostData::slotPostData(QByteArray data)
 {
-//    foreach (auto key, arr.keys()) {
-//        ject.insert(key,arr.value(key));
-//    }
-//    doc.setObject(ject);
-//    QByteArray arr=doc.toJson(QJsonDocument::Compact);
     request.setHeader(QNetworkRequest::ContentTypeHeader,QVariant("applocation/json"));
     QNetworkReply* reply=pManager->post(request,data);
 

@@ -1,4 +1,4 @@
-#include "platecl.h"
+﻿#include "platecl.h"
 
 PlateCL* PlateCL::pThis=nullptr;
 
@@ -23,6 +23,8 @@ PlateCL::PlateCL(QMap<int, QStringList> cameraPar, QString imgPath)
     rHandle5=0;
     rHandle6=0;
     cameraPort=80;        
+
+    handList<<handle1<<handle2<<handle3<<handle4<<handle5<<handle6;
     
     QtConcurrent::run(this,&PlateCL::initializingCamera);
 }
@@ -58,6 +60,27 @@ void PlateCL::CommonNotityCallBack(VzLPRClientHandle handle, void *pUserData, VZ
     Q_UNUSED(eNotify)
     Q_UNUSED(pStrDetail)
     Q_UNUSED(handle)
+
+    switch (eNotify) {
+    /**<无错误*/
+    case VZ_LPRC_NO_ERR:
+        break;
+    /**<用户名密码错误*/
+    case VZ_LPRC_ACCESS_DENIED:
+        break;
+    /**<网络连接故障*/
+    case VZ_LPRC_NETWORK_ERR:
+        break;
+    /**<设备上线*/
+    case VZ_LPRC_ONLINE:
+        break;
+    /**<设备掉线*/
+    case VZ_LPRC_OFFLINE:
+        break;
+    /**<IO口输入信号*/
+    case VZ_LPRC_IO_INPUT:
+        break;
+    }
 }
 
 int PlateCL::PlateInfoCallBack(VzLPRClientHandle handle, void *pUserData, const TH_PlateResult *pResult, unsigned uNumPlates, VZ_LPRC_RESULT_TYPE eResultType, const VZ_LPRC_IMAGE_INFO *pImgFull, const VZ_LPRC_IMAGE_INFO *pImgPlateClip)
@@ -182,6 +205,31 @@ void PlateCL::initializingCamera()
     }
 
     QtConcurrent::run(this,&PlateCL::resumeShows);
+
+//    for (int i=1;i<=6;i++) {
+//        if(handMap.value(i,0)==0){
+//            loginCamera(i);
+//        }
+//    }
+}
+
+void PlateCL::loginCamera(int key)
+{
+    if(!cameraPar.value(key).at(0).isEmpty()){
+        handList[key] = VzLPRClient_OpenEx(cameraPar.value(key).at(0).toLatin1().data(),80,cameraPar.value(key).at(1).toLatin1().data(),cameraPar.value(key).at(2).toLatin1().data(),0);
+        if(0==handList[key]){
+            qWarning().noquote()<<QString("Camera login failure<%1>").arg(cameraPar.value(key).at(0));
+
+            QtConcurrent::run(this,&PlateCL::loginCamera,key);
+        }
+        else {
+            handMap.insert(key,handList[key]);
+            qWarning().noquote()<<QString("Camera login succeeded<%1>").arg(cameraPar.value(key).at(0));
+            if(0==VzLPRClient_SetPlateInfoCallBack(handle6,PlateCL::PlateInfoCallBack,nullptr,1)){
+                qInfo().noquote()<<QString("VzLPRClient_SetPlateInfoCallBack set succeeded<%1>").arg(cameraPar.value(key).at(0));
+            }
+        }
+    }
 }
 
 void PlateCL::slotUgWhiteList(QMap<int, QMap<QString, QString> > wlst)
@@ -425,6 +473,13 @@ void PlateCL::slotDoSomething(int channel, int type, quintptr Wid)
     }
     else {
         qWarning().noquote()<<QString("this->comboBox->currentIndex()+1");
+    }
+}
+
+void PlateCL::slotSendAudio(int channel, QByteArray data)
+{
+    if(0==VzLPRClient_PlayVoice(handMap.value(channel),data,500,100,0)){
+        qDebug().noquote()<<QString("Play license plate successfully");
     }
 }
 

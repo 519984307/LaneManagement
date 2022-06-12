@@ -7,6 +7,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    initParmeter();
+
     qRegisterMetaType<QtMsgType>("QtMsgType");
     qRegisterMetaType<QMap<int,QStringList>>("QMap<int,QStringList>");
     qRegisterMetaType<QMap<QString,QString>>("QMap<QString,QString>");
@@ -18,22 +20,51 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this,&MainWindow::signalInitDataBase,pDataBase,&DataBase::initDataBaseSlot);
     connect(this,&MainWindow::signalInsertDataBase,pDataBase,&DataBase::insertDataBaseSlot);
 
-    initParmeter();
     emit signalInitDataBase("ZBYCS","sjzgjlg","sjzgjlg123","127.0.0.1",0);
 
     plateC=QSharedPointer<PlateCL>(new PlateCL(cameraPar,imgPath));
     connect(plateC.data(),&PlateCL::signalPlateResult,this,&MainWindow::slotPlateResult);
     connect(this,&MainWindow::signalPushShow,plateC.data(),&PlateCL::slotPushShow);
     connect(this,&MainWindow::signalDoSomething,plateC.data(),&PlateCL::slotDoSomething);
+    connect(this,&MainWindow::signalSendAudio,plateC.data(),&PlateCL::slotSendAudio);
 
-
-    postDa=new PostData(this);
+    postDa=new PostData(this,httpAddr);
     connect(this,&MainWindow::signalPostData,postDa,&PostData::slotPostData);
-    //audioS=new AudioServer(this);
+    connect(postDa,&PostData::signalPlateWhite,this,&MainWindow::slotPlateWhite);
+
+    /*****************************
+    * @brief:10分钟获取一次白名单
+    ******************************/
+    timerForWhite=new QTimer(this);
+    connect(timerForWhite,&QTimer::timeout,this,&MainWindow::slotTimerWhite);
+    timerForWhite->start(1000*60*10);
+    /*****************************
+    * @brief:立即获取白名单一次
+    ******************************/
+    slotTimerWhite();
+
+    pTcpServer=new TcpServer(this);
+    connect(pTcpServer,&TcpServer::signalContainerData,this,&MainWindow::slotContainerData);
+
+    //tts=new QTextToSpeech(this);
 }
 
 MainWindow::~MainWindow()
 {   
+    foreach(auto timer,timerMap.values()){
+        if(timer->isActive()){
+            timer->stop();
+            delete timer;
+            timer=nullptr;
+        }
+    }
+
+    if(timerForWhite->isActive()){
+        timerForWhite->stop();
+        delete timerForWhite;
+        timerForWhite=nullptr;
+    }
+
     delete pLog;
     delete ui;
 }
@@ -140,6 +171,12 @@ void MainWindow::initParmeter()
 
     set.beginGroup("Main");
     imgPath = set.value("path","c:\\Images").toString();
+    httpAddr = set.value("httpAddr","http://gateway.gaoyi.a.kiloway.cn/api/gateway").toString();
+    localWhilte = set.value("localWhilte",1).toBool();
+    allOut = set.value("allOut",1).toBool();
+    allIn = set.value("allIn",1).toBool();
+    administrativeChannel = set.value("administrativeChannel",0).toBool();
+    yellowPlatePass = set.value("yellowPlatePass",1).toBool();
     set.endGroup();
 
     set.beginGroup("Camera1");
@@ -180,6 +217,12 @@ void MainWindow::initParmeter()
 
     set.beginGroup("Main");
     set.setValue("path",imgPath);
+    set.setValue("httpAddr",httpAddr);
+    set.setValue("localWhilte",localWhilte);
+    set.setValue("allOut",allOut);
+    set.setValue("allIn",allIn);
+    set.setValue("administrativeChannel",administrativeChannel);
+    set.setValue("yellowPlatePass",yellowPlatePass);
     set.endGroup();
 
     set.beginGroup("Camera1");
@@ -383,30 +426,41 @@ void MainWindow::slotPlateResult(int channel, QString plate, int color,QByteArra
         break;
     }
 
-    QJsonDocument jsonDoc;
-    QJsonObject jsonObj1,jsonObj2;
+    /*****************************
+    * @brief:黄牌车请求数据
+    ******************************/
+//    if(color==2 && (channel==1 || channel==6)){
+//        QJsonDocument jsonDoc;
+//        QJsonObject jsonObj,jsonObjChild;
 
-    jsonObj1.insert("action", "InOutAction");
-    jsonObj1.insert("method", "Verification");
-    jsonObj1.insert("service", "container");
+//        jsonObj.insert("action", "InOutAction");
+//        jsonObj.insert("method", "Verification");
+//        jsonObj.insert("service", "container");
 
-    jsonObj2.insert("currentDate",time.toString("yyyy-MM-dd hh:mm:ss"));
-    jsonObj2.insert("doorNumber","02");
-    jsonObj2.insert("laneNumber",QString("%1").arg(channel,2,10,QLatin1Char('0')));
-    jsonObj2.insert("goodsType",0);
-    jsonObj2.insert("carNumber",QString::fromLocal8Bit("粤B050CS"));
-    jsonObj2.insert("goodsList","WDFU7652013");
+//        jsonObjChild.insert("currentDate",time.toString("yyyy-MM-dd hh:mm:ss"));
+//        jsonObjChild.insert("doorNumber","2");
+//        jsonObjChild.insert("laneNumber",QString("%1").arg(channel,2,10,QLatin1Char('0')));
+//        jsonObjChild.insert("goodsType",-1);
+//        jsonObjChild.insert("carNumber",plate.toUtf8().data());
+//        jsonObjChild.insert("goodsList","");
 
-    jsonObj1.insert("dto",QJsonValue(jsonObj2));
+//        jsonObj.insert("dto",QJsonValue(jsonObjChild));
+//        jsonDoc.setObject(jsonObj);
+//        qInfo().noquote()<<QString("[%1] HTTP request data<%2>").arg(this->metaObject()->className(),QString(jsonDoc.toJson()));
+//        emit signalPostData(jsonDoc.toJson(QJsonDocument::Compact));
+//    }
 
-    jsonDoc.setObject(jsonObj1);
-    qDebug()<<jsonDoc.toJson(QJsonDocument::Compact);
-    emit signalPostData(jsonDoc.toJson(QJsonDocument::Compact));
-
-    ///
-    /// \brief sendRs485Data 推送车牌数据到显示屏
-    ///
-    sendRs485Data(plate,channel);
+    if(yellowPlatePass){
+        ///
+        /// \brief sendRs485Data 推送车牌数据到显示屏
+        ///
+        sendRs485Data(plate,channel);   
+    }    
+    else {
+        if(color!=2){
+            sendRs485Data(plate,channel);     
+        } 
+    }
 }
 
 void MainWindow::slotResumeShows()
@@ -418,78 +472,213 @@ void MainWindow::slotResumeShows()
     }
 }
 
+void MainWindow::slotTimerWhite()
+{
+    QJsonDocument jsonDoc;
+    QJsonObject jsonObj,jsonObjChild;
+
+    jsonObj.insert("action", "InOutAction");
+    jsonObj.insert("method", "GetWhiteList");
+    jsonObj.insert("service", "container");
+    jsonDoc.setObject(jsonObj);
+
+    qInfo().noquote()<<QString("[%1] HTTP request data<%2>").arg(this->metaObject()->className(),QString(jsonDoc.toJson()));
+    emit signalPostData(jsonDoc.toJson(QJsonDocument::Compact));
+}
+
+void MainWindow::slotPlateWhite(QStringList plateList)
+{
+    this->plateList=plateList;
+}
+
+void MainWindow::slotContainerData(QString data)
+{
+    if(yellowPlatePass){
+        return; 
+    }
+    
+    qDebug().noquote()<<QString("Process container number data:").arg(data);
+    
+    locker.lockForRead();
+    /* "5,[C|20220610215141|05|0|WDFU1234567|Y|22G1|粤B050CS|黄],在场的车辆" */
+    QStringList tmpL=data.split(",");
+    int channel=tmpL.at(0).toInt();
+
+    QString carNumber="";
+    QString goodsList="";
+
+    QStringList tmpConL=tmpL[1].split("|");
+    if(tmpL.at(1).indexOf("[U")!=-1){
+        carNumber = tmpConL.at(3).toUtf8().data();
+    }
+    else if (tmpL.at(1).indexOf("[C")!=-1 && tmpConL.at(3).toInt()<2 && tmpConL.length()>=8) {
+        goodsList = tmpConL.at(4);
+        carNumber = tmpConL.at(7).toUtf8().data();
+    }
+    else if (tmpL.at(1).indexOf("[C")!=-1 && tmpConL.at(3).toInt()==2 && tmpConL.length()>=11) {
+        goodsList = QString("%1,%2").arg(tmpConL.at(4),tmpL.at(6));
+        carNumber = tmpConL.at(10).toUtf8().data();
+    }
+
+
+    QStringList tmpData={tmpL.at(2),carNumber,goodsList};
+
+    QString msgR="";
+
+    for(int i=0;i<tmpData.size();i++){
+        QString tmp=bgkToHex(tmpData.at(i));
+        if(i==0){
+            msgR+=QString("%1").arg(i+1,2,16,QChar('0')).toUpper()+"00030201"+QString("%1").arg(tmpData.at(i).toLatin1().length()*2,2,16,QChar('0')).toUpper()+tmp.toUpper();
+        }
+        else if(i==1){
+            msgR+=QString("%1").arg(i+1,2,16,QChar('0')).toUpper()+"0B0A0101"+QString("%1").arg(tmpData.at(i).toLatin1().length()+1,2,16,QChar('0')).toUpper()+tmp.toUpper();
+        }
+        else {
+            msgR+=QString("%1").arg(i+1,2,16,QChar('0')).toUpper()+"0B0A0101"+QString("%1").arg(tmpData.at(i).toLatin1().length()+1,2,16,QChar('0')).toUpper()+tmp.toUpper();
+        }
+    }
+    QString head="F501"+QString("%1").arg(msgR.length()/2+3,4,16,QChar('0')).toUpper()+"000200"+msgR;
+    QByteArray arr=head.toLatin1();
+
+    /*****************************
+    * @brief:求xor校验
+    ******************************/
+    int xorResult = arr.mid(0,2).toInt(0,16);
+    for (int i = 2; i < arr.count(); i+=2) {
+        xorResult ^= arr.mid(i,2).toInt(0,16);
+    }
+
+    if(tmpData.at(0).indexOf("您")!=-1){
+        arr=head.insert(head.length()-4,"0A").toLatin1()+QString("%1").arg(xorResult,2,16,QChar('0')).toLatin1().toUpper();
+    }
+    else {
+        arr=head.toLatin1()+QString("%1").arg(xorResult,2,16,QChar('0')).toLatin1().toUpper();
+    }
+
+    /*****************************
+    * @brief:推送车牌显示
+    ******************************/
+    emit signalPushShow(channel,hexStringtoByteArray(arr),1);
+
+    if(timerMap.value(channel)->isActive()){
+        timerMap.value(channel)->stop();
+    }
+    timerMap.value(channel)->start(20000);
+}
+
 void MainWindow::sendRs485Data(QString plate,int channel)
 {
     locker.lockForRead();
 
-    QString ValidTime="";
-    bool Blacklist=false;
-    bool Validity=true;
-    QString Name="";
-    QString Department="";
-
-    bool isRecord=false;
-
-    QString bg=QString::fromLocal8Bit("黑名单车辆，禁止通行！");
-    QString wg=QString::fromLocal8Bit("港区车辆，请通行！");
-    QString lg=QString::fromLocal8Bit("临时车辆，请下车登记！");
-
-    QString filter=QString("Plate='%1'").arg(plate);
-    QScopedPointer<QSqlTableModel> model(new QSqlTableModel(this,db));
-    model->setTable(QString("WhiteList"));
-    model->setFilter(filter);
-    model->select();
-    while (model->canFetchMore()) {
-        model->fetchMore();
-    }
-
-    if(model->rowCount()==1){
-        qInfo().noquote()<<QString("Description The whitelist number data is searched successfully<%1>").arg(plate);
-
+    if(channel==1){
         /*****************************
-        * @brief:查询到数据库，进一步读取内容
+        * @brief:1#不管控，所有车辆可以进入
         ******************************/
-        QSqlRecord record=model->record(0);
-        ValidTime=record.value("ValidTime").toString();
-        Department=record.value("Department").toString();
-        Name=record.value("Name").toString();
-        Blacklist=record.value("Blacklist").toBool();
-        Validity=record.value("Validity").toBool();
-
-        isRecord=true;
-    }
-
-    QString msgR="";
-    QStringList msgList;
-
-    bool isWg=false;
-
-    if(isRecord && Validity){
-        if(Blacklist){
-            msgList.append(bg);
-        }
-        else
-        {            
-            isWg=true;
-            msgList.append(wg);
-
-            /*****************************
-            * @brief:白名单抬杆
-            ******************************/
+        if(!administrativeChannel){
             emit signalDoSomething(channel,1,0);
         }
     }
-    else
-    {
-        msgList.append(lg);
-    }
 
-    /*****************************
-    * @brief:相机不参与抬杆，直接通过软件抬杆。临时车辆出闸直接方行，数据库没有启用的数据也不抬杆
-    ******************************/
-    if(!isWg && !Blacklist && !isRecord && channel<=3){
+
+    if(allOut && plate.indexOf("无")==-1 && (channel==2 || channel==3)){
         emit signalDoSomething(channel,1,0);
     }
+
+    if(allIn && plate.indexOf("无")==-1 && (channel==4 || channel==5 || channel==6)){
+        emit signalDoSomething(channel,1,0);
+    }
+
+    QString bg=QString::fromLocal8Bit("黑名单车辆，禁止通行！");
+    QString wg=QString::fromLocal8Bit("内部车辆，请通行！");
+    QString lg=QString::fromLocal8Bit("临时车辆，人工处理！");
+    QString msgR="";
+    QStringList msgList;
+
+    if(!localWhilte){
+        if(plateList.indexOf(plate)!=-1){
+            msgList.append(wg);
+
+            if(administrativeChannel && channel==1){
+                emit signalDoSomething(channel,1,0);
+            }
+            else if(!allOut && (channel==2 || channel==3)){
+                emit signalDoSomething(channel,1,0);
+            }
+            else if(!allIn && (channel==4 || channel==5 || channel==6)){
+                emit signalDoSomething(channel,1,0);
+            }
+        }
+        else {
+            msgList.append(lg);
+        }
+    }
+    else {
+        QString ValidTime="";
+        bool Blacklist=false;
+        bool Validity=true;
+        QString Name="";
+        QString Department="";
+
+        bool isRecord=false;
+
+        QString filter=QString("Plate='%1'").arg(plate);
+        QScopedPointer<QSqlTableModel> model(new QSqlTableModel(this,db));
+        model->setTable(QString("WhiteList"));
+        model->setFilter(filter);
+        model->select();
+        while (model->canFetchMore()) {
+            model->fetchMore();
+        }
+
+        if(model->rowCount()==1){
+            qInfo().noquote()<<QString("Description The whitelist number data is searched successfully<%1>").arg(plate);
+
+            /*****************************
+            * @brief:查询到数据库，进一步读取内容
+            ******************************/
+            QSqlRecord record=model->record(0);
+            ValidTime=record.value("ValidTime").toString();
+            Department=record.value("Department").toString();
+            Name=record.value("Name").toString();
+            Blacklist=record.value("Blacklist").toBool();
+            Validity=record.value("Validity").toBool();
+
+            isRecord=true;
+        }
+
+        bool isWg=false;
+
+        if(isRecord && Validity){
+            if(Blacklist){
+                msgList.append(bg);
+            }
+            else
+            {
+                isWg=true;
+                msgList.append(wg);
+
+                if(administrativeChannel && channel==1){
+                    emit signalDoSomething(channel,1,0);
+                }
+                else if(!allOut && (channel==2 || channel==3)){
+                    emit signalDoSomething(channel,1,0);
+                }
+                else if(!allIn && (channel==4 || channel==5 || channel==6)){
+                    emit signalDoSomething(channel,1,0);
+                }
+            }
+        }
+        else
+        {
+            msgList.append(lg);
+        }
+    }
+
+//    QString sudio=plate.append(msgList.at(0));
+//    if(tts->state()==QTextToSpeech::Ready){
+//        tts->say()
+//    }
+//    emit signalSendAudio(channel,sudio.toLocal8Bit());
 
     msgList.append(plate);
     for(int i=0;i<msgList.size();i++){
@@ -527,7 +716,7 @@ void MainWindow::sendRs485Data(QString plate,int channel)
     if(timerMap.value(channel)->isActive()){
         timerMap.value(channel)->stop();
     }
-    timerMap.value(channel)->start(10000);
+    timerMap.value(channel)->start(20000);
 }
 
 QByteArray MainWindow::strToHex(QString str)

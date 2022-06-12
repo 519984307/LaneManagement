@@ -18,8 +18,8 @@
 #include <QPixmap>
 #include <QCloseEvent>
 #include <QResizeEvent>
-
 #include <QReadWriteLock>
+//#include <QtTextToSpeech/QTextToSpeech>
 
 #include "LogController/logcontroller.h"
 #include "logform.h"
@@ -27,10 +27,8 @@
 #include "database.h"
 #include "platecl.h"
 #include "lockdialog.h"
-
-//#include "audioserver.h"
 #include "postdata.h"
-
+#include "tcpserver.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -52,14 +50,57 @@ private:
     Ui::MainWindow *ui;
     QComboBox* comboBox;
 
-    //AudioServer* audioS;
+    //QTextToSpeech *tts;
 
+    ///
+    /// \brief pTcpServer 接收集装箱通道数据
+    ///
+    TcpServer* pTcpServer;
+
+    ///
+    /// \brief postDa 数据请求
+    ///
     PostData* postDa;
+
+    ///
+    /// \brief plateList 拉取白名单列表
+    ///
+    QStringList plateList;
+
+    ///
+    /// \brief localWhilte 白名单状态
+    ///
+    bool localWhilte;
+
+    ///
+    /// \brief allOut 出闸校验状态
+    ///
+    bool allOut;
+
+    ///
+    /// \brief allIn 进闸校验状态
+    ///
+    bool allIn;
+    
+    ///
+    /// \brief yellowPlatePass 黄牌车是否处理
+    ///
+    bool yellowPlatePass;
+
+    ///
+    /// \brief administrativeChannel 行政车辆
+    ///
+    bool administrativeChannel;
 
     ///
     /// \brief imgPath 图片路径
     ///
     QString imgPath;
+
+    ///
+    /// \brief httpAddr 数据接口地址
+    ///
+    QString httpAddr;
 
     ///
     /// \brief PL 车牌处理类
@@ -115,6 +156,11 @@ private:
     /// \brief imgArrMap 图片列表，供重绘使用
     ///
     QMap<int,QByteArray> imgArrMap;
+
+    ///
+    /// \brief TimerForWhite 轮询获取白名单
+    ///
+    QTimer* timerForWhite;
               
     ///
     /// \brief initParmeter 初始化参数
@@ -171,6 +217,12 @@ signals:
     ///
     void signalPostData(QByteArray data);
 
+    ///
+    /// \brief signalSendAudio 发送车牌数据
+    /// \param data
+    ///
+    void signalSendAudio(int channel,QByteArray data);
+
 private slots:
 
     void on_actionLog_triggered();
@@ -181,7 +233,7 @@ private slots:
     void on_actionLogin_triggered();
     void on_actionClose_triggered();
     void on_actionSetting_triggered();
-
+    void on_actionLock_triggered();
     
     ///
     /// \brief slotPlateResult 车牌结果
@@ -195,6 +247,22 @@ private slots:
     /// \brief slotResumeShows 定时恢复默认显示
     ///
     void slotResumeShows();
-    void on_actionLock_triggered();
+
+    ///
+    /// \brief slotTimerWhite 轮询获取白名单
+    ///
+    void slotTimerWhite();
+
+    ///
+    /// \brief slotPlateWhite 拉取的白名单写入数据库
+    /// \param plateList
+    ///
+    void slotPlateWhite(QStringList plateList);
+
+    ///
+    /// \brief slotContainerData 箱号软件推送的数据
+    /// \param data
+    ///
+    void slotContainerData(QString data);
 };
 #endif // MAINWINDOW_H
