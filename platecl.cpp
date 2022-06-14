@@ -363,17 +363,18 @@ void PlateCL::resumeShows()
     QByteArray arr;
 
     int ind=1;
-    if(ind<4){
-        arr=msgIN.toLatin1();
-        arr=hexStringtoByteArray(arr);
-    }
-    else {
-        arr=msgOUT.toLatin1();
-        arr=hexStringtoByteArray(arr);
-    }
-
 
     foreach(auto hand,handMap.values()){
+
+        if(ind<4){
+            arr=msgOUT.toLatin1();
+            arr=hexStringtoByteArray(arr);
+        }
+        else {
+            arr=msgIN.toLatin1();
+            arr=hexStringtoByteArray(arr);
+        }
+
         int rec= VzLPRClient_SerialStart(hand,0,nullptr,nullptr);
         VzLPRClient_SerialSend(rec,const_cast<unsigned char*>((const unsigned char*)arr.toStdString().c_str()) ,arr.length());
         VzLPRClient_SerialStop(rec);

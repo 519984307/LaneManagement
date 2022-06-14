@@ -38,15 +38,26 @@ MainWindow::MainWindow(QWidget *parent)
     timerForWhite=new QTimer(this);
     connect(timerForWhite,&QTimer::timeout,this,&MainWindow::slotTimerWhite);
     timerForWhite->start(1000*60*10);
+
     /*****************************
     * @brief:立即获取白名单一次
     ******************************/
     slotTimerWhite();
 
+    /*****************************
+    * @brief:接收箱号数据
+    ******************************/
     pTcpServer=new TcpServer(this);
     connect(pTcpServer,&TcpServer::signalContainerData,this,&MainWindow::slotContainerData);
 
-    //tts=new QTextToSpeech(this);
+    /*****************************
+    * @brief:发送语音信息
+    ******************************/
+    for(int i=2;i<=5;i++){
+        AudioServer* pAudio=new AudioServer(this,audioPar.value(i).at(0),audioPar.value(i).at(1).toInt(),i);
+        connect(this,&MainWindow::toSendDataSignal,pAudio,&AudioServer::toSendDataSlot);
+        audioMap.insert(i,pAudio);
+    }
 }
 
 MainWindow::~MainWindow()
@@ -215,6 +226,22 @@ void MainWindow::initParmeter()
     QString poww6 = set.value("poww6","admin").toString();
     set.endGroup();
 
+    set.beginGroup("Audio");
+    QString auaddr2 = set.value("auaddr2","192.168.1.121").toString();
+    QString auaddr3 = set.value("auaddr3","192.168.1.131").toString();
+    QString auaddr4 = set.value("auaddr4","192.168.1.141").toString();
+    QString auaddr5 = set.value("auaddr5","192.168.1.151").toString();
+    int auport = set.value("auport",50000).toInt();
+    set.endGroup();
+
+    set.beginGroup("Audio");
+    set.setValue("auaddr2",auaddr2);
+    set.setValue("auaddr3",auaddr3);
+    set.setValue("auaddr4",auaddr4);
+    set.setValue("auaddr5",auaddr5);
+    set.setValue("auport",auport);
+    set.endGroup();
+
     set.beginGroup("Main");
     set.setValue("path",imgPath);
     set.setValue("httpAddr",httpAddr);
@@ -267,6 +294,11 @@ void MainWindow::initParmeter()
     cameraPar.insert(4,{addr4,user4,poww4});
     cameraPar.insert(5,{addr5,user5,poww5});
     cameraPar.insert(6,{addr6,user6,poww6});
+
+    audioPar.insert(2,{auaddr2,QString::number(50000)});
+    audioPar.insert(3,{auaddr3,QString::number(50000)});
+    audioPar.insert(4,{auaddr4,QString::number(50000)});
+    audioPar.insert(5,{auaddr5,QString::number(50000)});
 }
 
 void MainWindow::on_actionLog_triggered()
@@ -489,39 +521,72 @@ void MainWindow::slotTimerWhite()
 void MainWindow::slotPlateWhite(QStringList plateList)
 {
     this->plateList=plateList;
+//    if(plateList.length()!=0){
+//         localWhilte=false;
+//    }
+//    else {
+//        localWhilte=true;
+//    }
 }
 
 void MainWindow::slotContainerData(QString data)
 {
-    if(yellowPlatePass){
-        return; 
-    }
+    /*****************************
+    * @brief:暂时不过滤，所有车牌校验本地数据库
+    ******************************/
+//    if(yellowPlatePass){
+//        return;
+//    }
     
-    qDebug().noquote()<<QString("Process container number data:").arg(data);
+    qDebug().noquote()<<QString("Process container number data:%1").arg(data);
     
     locker.lockForRead();
-    /* "5,[C|20220610215141|05|0|WDFU1234567|Y|22G1|粤B050CS|黄],在场的车辆" */
+    /* "5,[C|20220610215141|05|0|WDFU1234567|Y|22G1|粤B050CS|黄],在场的车辆,1" */
+    /* "3,[C|20220614100702|03|2||N||N|22G1|22G1|吉CB7351|黄],验证成功,0" */
+
     QStringList tmpL=data.split(",");
+    if(tmpL.length()!=4){
+        qCritical().noquote()<<QString("The parsed data is abnormal, and the parameters do not meet the requirements");
+        return;
+    }
+
     int channel=tmpL.at(0).toInt();
 
     QString carNumber="";
     QString goodsList="";
 
     QStringList tmpConL=tmpL[1].split("|");
-    if(tmpL.at(1).indexOf("[U")!=-1){
+    if(tmpL.at(1).startsWith("[U") && tmpConL.length()==5){
         carNumber = tmpConL.at(3).toUtf8().data();
     }
-    else if (tmpL.at(1).indexOf("[C")!=-1 && tmpConL.at(3).toInt()<2 && tmpConL.length()>=8) {
+    else if (tmpL.at(1).startsWith("[C") && tmpConL.length()==9 && tmpConL.at(3).toInt()<2 ) {
         goodsList = tmpConL.at(4);
         carNumber = tmpConL.at(7).toUtf8().data();
     }
-    else if (tmpL.at(1).indexOf("[C")!=-1 && tmpConL.at(3).toInt()==2 && tmpConL.length()>=11) {
-        goodsList = QString("%1,%2").arg(tmpConL.at(4),tmpL.at(6));
+    else if (tmpL.at(1).startsWith("[C") && tmpConL.length()==12 && tmpConL.at(3).toInt()==2 ) {
+        goodsList = QString("%1,%2").arg(tmpConL.at(4),tmpConL.at(6));
         carNumber = tmpConL.at(10).toUtf8().data();
     }
 
-
     QStringList tmpData={tmpL.at(2),carNumber,goodsList};
+
+    /*****************************
+    * @brief:返回信息为空，证明请求接口异常，直接跳转到sendRs485Data执行
+    ******************************/
+    if(tmpL.at(2).isEmpty()){
+        //localWhilte=true;
+        /*****************************
+        * @brief:暂时不处理请求异常
+        ******************************/
+        //sendRs485Data(carNumber,channel);
+        //return;
+        tmpData.clear();
+        tmpData<<"服务器请求数据异常，请联系管理员！"<<carNumber<<goodsList;
+    }
+    else{
+        tmpData.clear();
+        tmpData<<tmpL.at(2)<<carNumber<<goodsList;
+    }
 
     QString msgR="";
 
@@ -556,6 +621,43 @@ void MainWindow::slotContainerData(QString data)
     }
 
     /*****************************
+    * @brief:发送语音播报
+    ******************************/
+    QString tmpMsg="";
+    for(int i=0;i<tmpData.length();i++){
+        tmpMsg+=tmpData.at(i)+" ";
+    }
+    emit toSendDataSignal(channel,QString("#[v03][s04]%1").arg(tmpMsg));
+
+    bool lift=false;
+    /*****************************
+    * @brief:收到抬杆信息，进行抬杆
+    ******************************/
+    if(tmpL.at(3).toInt()==0){
+        //emit signalDoSomething(channel,1,0);
+        lift=true;
+    }
+    else{
+        if(allOut && carNumber!="_无_" && (channel==2 || channel==3)){
+            //emit signalDoSomething(channel,1,0);
+            lift=true;
+        }
+        if(allIn && carNumber!="_无_" && (channel==4 || channel==5)){
+            //emit signalDoSomething(channel,1,0);
+            lift=true;
+        }
+    }
+
+    if(lift){
+        /*****************************
+        * @brief:白名单没有抬杆，这里才进行抬杆
+        ******************************/
+        if(plateLiftMap.value(channel)!=carNumber){
+            emit signalDoSomething(channel,1,0);
+        }
+    }
+
+    /*****************************
     * @brief:推送车牌显示
     ******************************/
     emit signalPushShow(channel,hexStringtoByteArray(arr),1);
@@ -570,6 +672,8 @@ void MainWindow::sendRs485Data(QString plate,int channel)
 {
     locker.lockForRead();
 
+    bool lift=false;
+
     if(channel==1){
         /*****************************
         * @brief:1#不管控，所有车辆可以进入
@@ -579,13 +683,21 @@ void MainWindow::sendRs485Data(QString plate,int channel)
         }
     }
 
-
-    if(allOut && plate.indexOf("无")==-1 && (channel==2 || channel==3)){
+    if(allOut && plate!="_无_" && (channel==2 || channel==3)){
         emit signalDoSomething(channel,1,0);
+        lift=true;
     }
 
-    if(allIn && plate.indexOf("无")==-1 && (channel==4 || channel==5 || channel==6)){
+    if(allIn && plate!="_无_" && (channel==4 || channel==5 || channel==6)){
         emit signalDoSomething(channel,1,0);
+        lift=true;
+    }
+
+    if(lift){
+        /*****************************
+        * @brief:匹配已抬杆的车牌，防止多次抬杆
+        ******************************/
+        plateLiftMap.insert(channel,plate);
     }
 
     QString bg=QString::fromLocal8Bit("黑名单车辆，禁止通行！");
@@ -600,12 +712,22 @@ void MainWindow::sendRs485Data(QString plate,int channel)
 
             if(administrativeChannel && channel==1){
                 emit signalDoSomething(channel,1,0);
+                lift=true;
             }
-            else if(!allOut && (channel==2 || channel==3)){
+            if(!allOut && (channel==2 || channel==3)){
                 emit signalDoSomething(channel,1,0);
+                lift=true;
             }
-            else if(!allIn && (channel==4 || channel==5 || channel==6)){
+            if(!allIn && (channel==4 || channel==5 || channel==6)){
                 emit signalDoSomething(channel,1,0);
+                lift=true;
+            }
+
+            if(lift){
+                /*****************************
+                * @brief:匹配已抬杆的车牌，防止多次抬杆
+                ******************************/
+                plateLiftMap.insert(channel,plate);
             }
         }
         else {
@@ -630,7 +752,10 @@ void MainWindow::sendRs485Data(QString plate,int channel)
             model->fetchMore();
         }
 
-        if(model->rowCount()==1){
+        /*****************************
+        * @brief:防止重复添加白名单，导致查询数据不止一条
+        ******************************/
+        if(model->rowCount()>=1){
             qInfo().noquote()<<QString("Description The whitelist number data is searched successfully<%1>").arg(plate);
 
             /*****************************
@@ -660,11 +785,18 @@ void MainWindow::sendRs485Data(QString plate,int channel)
                 if(administrativeChannel && channel==1){
                     emit signalDoSomething(channel,1,0);
                 }
-                else if(!allOut && (channel==2 || channel==3)){
+                if(!allOut && (channel==2 || channel==3)){
                     emit signalDoSomething(channel,1,0);
                 }
-                else if(!allIn && (channel==4 || channel==5 || channel==6)){
+                if(!allIn && (channel==4 || channel==5 || channel==6)){
                     emit signalDoSomething(channel,1,0);
+                }
+
+                if(lift){
+                    /*****************************
+                    * @brief:匹配已抬杆的车牌，防止多次抬杆
+                    ******************************/
+                    plateLiftMap.insert(channel,plate);
                 }
             }
         }
@@ -679,6 +811,7 @@ void MainWindow::sendRs485Data(QString plate,int channel)
 //        tts->say()
 //    }
 //    emit signalSendAudio(channel,sudio.toLocal8Bit());
+
 
     msgList.append(plate);
     for(int i=0;i<msgList.size();i++){
@@ -707,6 +840,15 @@ void MainWindow::sendRs485Data(QString plate,int channel)
     else {
         arr=head.toLatin1()+QString("%1").arg(xorResult,2,16,QChar('0')).toLatin1().toUpper();
     }
+
+    /*****************************
+    * @brief:发送语音播报
+    ******************************/
+    QString tmpMsg="";
+    for(int i=0;i<msgList.length();i++){
+        tmpMsg+=msgList.at(i)+" ";
+    }
+    emit toSendDataSignal(channel,QString("#[v03][s04]%1").arg(tmpMsg));
 
     /*****************************
     * @brief:推送车牌显示

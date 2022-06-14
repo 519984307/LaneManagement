@@ -11,7 +11,7 @@ CONFIG += skip_target_version_ext
 
 QMAKE_TARGET_COPYRIGHT = "Copyright 2021 Shen zhen zhong bai yuan"
 
-VERSION = 1.0.0.2_2206121532
+VERSION = 1.0.0.4_2206131656
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -27,7 +27,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     adddialog.cpp \
     #audioserver.cpp \
-    avdioserverform.cpp \
+    audioserver.cpp \
     database.cpp \
     databaseform.cpp \
     filterdialog.cpp \
@@ -45,7 +45,7 @@ HEADERS += \
     DataInterRequest/datainterchangeinterface.h \
     adddialog.h \
     #audioserver.h \
-    avdioserverform.h \
+    audioserver.h \
     database.h \
     databaseform.h \
     filterdialog.h \

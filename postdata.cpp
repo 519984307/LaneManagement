@@ -1,4 +1,4 @@
-#include "postdata.h"
+﻿#include "postdata.h"
 
 PostData::PostData(QObject *parent, QString httpAddr)
 {
@@ -27,6 +27,7 @@ void PostData::replyFinishedSlot(QNetworkReply *reply)
 {
     if (reply && reply->error() != QNetworkReply::NoError) {
         qCritical().noquote()<<QString("Data transfer failure<errorCode=%1>").arg(reply->errorString());
+        emit signalPlateWhite(QStringList(""));
     }
     reply->close();
     reply->abort();
@@ -38,11 +39,13 @@ void PostData::slot_SslErrors(QList<QSslError> sslErr)
     foreach(auto err,sslErr){
         qCritical().noquote()<<QString("An error found during processing the request:%1").arg(err.errorString());
     }
+    emit signalPlateWhite(QStringList(""));
 }
 
 void PostData::slot_Error(QNetworkReply::NetworkError err)
 {
     qCritical().noquote()<<QString("An error found during processing the request:%1").arg(err);
+    emit signalPlateWhite(QStringList(""));
 }
 
 void PostData::slot_finished()
@@ -51,7 +54,10 @@ void PostData::slot_finished()
 
     if (reply && reply->error() != QNetworkReply::NoError) {
         qCritical().noquote()<<QString("Data transfer failure<errorCode=%1>").arg(reply->errorString());
+        emit signalPlateWhite(QStringList(""));
     }
+
+    bool isRead=false;
 
     QByteArray arr=reply->readAll();
     QJsonDocument doc =QJsonDocument::fromJson(arr);
@@ -73,6 +79,7 @@ void PostData::slot_finished()
             QJsonArray valArr=val.toArray();
 
             QStringList plateList;
+            isRead=true;
 
             for(int i=0;i<valArr.size();i++){
                 QJsonValue tmpVal=valArr.at(i);
@@ -81,6 +88,10 @@ void PostData::slot_finished()
             }
             emit signalPlateWhite(plateList);
         }
+    }
+
+    if(!isRead){
+        emit signalPlateWhite(QStringList(""));
     }
 
     reply->abort();

@@ -1,75 +1,116 @@
-#include "audioserver.h"
+﻿#include "audioserver.h"
 
-AudioServer::AudioServer(QObject *parent) : QObject(parent)
+AudioServer::AudioServer(QObject *parent, QString addr, int port,int channel) : QObject(parent)
 {
     this->setParent(parent);
 
-    client=new QWebSocket();
+    this->addr=addr;
+    this->port=port;
+    this->channel=channel;
 
-//    QNetworkRequest request=QNetworkRequest(QUrl("wss://127.0.0.1:8088/ws"));
-//    QSslConfiguration config=QSslConfiguration::defaultConfiguration();
-//    config.setPeerVerifyMode(QSslSocket::VerifyNone);
-//    config.setProtocol(QSsl::TlsV1SslV3);
-//    request.setSslConfiguration(config);
+    pTcpClient=new QTcpSocket(this);
+    connect(pTcpClient,&QIODevice::readyRead,this,&AudioServer::receiveDataSlot);
+    connect(pTcpClient,&QAbstractSocket::connected,this,&AudioServer::connectedSlot);
+    connect(pTcpClient,&QAbstractSocket::disconnected,this,&AudioServer::disconnectedSlot);
+    connect(pTcpClient,QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),this,&AudioServer::displayErrorSlot);
 
-    QSslConfiguration conf=client->sslConfiguration();
-    conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-    conf.setProtocol(QSsl::TlsV1SslV3);
-    client->setSslConfiguration(conf);
+    pTimerLinkState=new QTimer(this);
+    pTimerAutoLink= new QTimer(this);
+    connect(pTimerLinkState,&QTimer::timeout,this,&AudioServer::heartbeatSlot);
+    connect(pTimerAutoLink,&QTimer::timeout,this,&AudioServer::startLinkSlot);
 
-//    QList<QSslCertificate>cerlist=QSslCertificate::fromPath("C:\\cert\\");
-//    QSslError error(QSslError::SelfSignedCertificate,cerlist.at(0));
-//    QList<QSslError> expectedErrors;
-//    expectedErrors.append(error);
-//    client->ignoreSslErrors(expectedErrors);
+    isConnected=false;
+    this->addr=addr;
+    this->port=port;
 
-
-//    QList<QSslCertificate> cert = QSslCertificate::fromPath(QLatin1String("C:\\cert\\cert.pem"));
-//    QSslError error(QSslError::SelfSignedCertificate, cert.at(0));
-//    QList<QSslError> expectedSslErrors;
-//    expectedSslErrors.append(error);
-
-//    //QWebSocket socket;
-//    client->ignoreSslErrors(expectedSslErrors);
-//    //socket.open(QUrl(QStringLiteral("ws://myserver.at.home")));
-
-
-    connect(client,&QWebSocket::connected,this,&AudioServer::slotConnected);
-    connect(client,&QWebSocket::disconnected,this,&AudioServer::slotDisconnected);
-    connect(client,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(slotError(QAbstractSocket::SocketError)));
-
-//    client->open(QUrl(QStringLiteral("https://127.0.0.1:8088")));
-
-//    connect(client, &QWebSocket::connected, this, &AudioServer::slotConnected);
-//    connect(client, QOverload<const QList<QSslError>&>::of(&QWebSocket::sslErrors),
-//            this, &AudioServer::onSslErrors);
-    client->open(QUrl("wss://127.0.0.1:8088/ws"));
-    //client->open(request);
+    startLinkSlot();
 }
 
-void AudioServer::slotConnected()
+AudioServer::~AudioServer()
 {
-    qDebug()<<"sucess";
+    if(pTcpClient != nullptr && pTcpClient->isOpen()){
+        pTcpClient->disconnected();
+        pTcpClient->close();
+        pTcpClient->abort();
+    }
+
+    isConnected=false;
+
+    if(pTimerLinkState!=nullptr){
+        pTimerLinkState->stop();
+    }
+    if(pTimerAutoLink!=nullptr){
+        pTimerAutoLink->stop();
+    }
+
+    delete pTimerLinkState;
+    pTimerLinkState=nullptr;
+
+    delete  pTimerAutoLink;
+    pTimerAutoLink=nullptr;
 }
 
-void AudioServer::slotDisconnected()
+void AudioServer::startLinkSlot()
 {
-    qDebug()<<"failed";
+    if(!isConnected){
+        pTcpClient->close();
+        pTcpClient->abort();
+        pTcpClient->connectToHost(addr,port);
+    }
 }
 
-void AudioServer::slotError(QAbstractSocket::SocketError error)
+void AudioServer::heartbeatSlot()
 {
-    qDebug()<<error;
+    if(pTcpClient->isOpen()){
+        pTcpClient->write("[H]");/* 心跳包数据 */
+    }
 }
 
-void AudioServer::onSslErrors(const QList<QSslError> &errors)
- {
-     //Q_UNUSED(errors);
+void AudioServer::connectedSlot()
+{
+    isConnected=true;
 
-     // WARNING: Never ignore SSL errors in production code.
-     // The proper way to handle self-signed certificates is to add a custom root
-     // to the CA store.
+    if(!pTimerLinkState->isActive()){
+        pTimerLinkState->start(15000);
+    }
 
-    qDebug()<<errors.at(0);
-    client->ignoreSslErrors();
- }
+    qDebug().noquote()<<QString("IP:%1:%2 link successful").arg(addr).arg(port);
+}
+
+void AudioServer::receiveDataSlot()
+{
+    /*****************************
+    * @brief:服务器主动取结果
+    ******************************/
+    QByteArray buf=pTcpClient->readAll();
+    qDebug()<<QString("The internal socket receives data:%1").arg(buf.data());
+    buf.clear();
+}
+
+void AudioServer::disconnectedSlot()
+{
+    isConnected=false;
+}
+
+void AudioServer::displayErrorSlot(QAbstractSocket::SocketError socketError)
+{
+    isConnected=false;
+
+    pTimerAutoLink->start(15000);
+    qWarning().noquote()<<QString("IP:%1:%3  link error<errorCode=%2>").arg(addr).arg(socketError).arg(port);
+}
+
+void AudioServer::toSendDataSlot(int channel_number,const QString &data)
+{
+    if(channel_number==channel){
+        if(!pTcpClient->isOpen()){
+            startLinkSlot();
+            pTcpClient->waitForConnected(3000);
+        }
+        if(pTcpClient->isOpen()){
+                 pTcpClient->write(data.toLocal8Bit());
+        }
+//        qDebug()<<data;
+//        qDebug()<<data.toLocal8Bit();
+    }
+}

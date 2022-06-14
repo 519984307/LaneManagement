@@ -29,6 +29,7 @@
 #include "lockdialog.h"
 #include "postdata.h"
 #include "tcpserver.h"
+#include "audioserver.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -56,6 +57,11 @@ private:
     /// \brief pTcpServer 接收集装箱通道数据
     ///
     TcpServer* pTcpServer;
+
+    ///
+    /// \brief pAudio 音频类
+    ///
+    QMap<int ,AudioServer*> audioMap;
 
     ///
     /// \brief postDa 数据请求
@@ -131,6 +137,11 @@ private:
     /// \brief cameraPar 相机参数
     ///
     QMap<int,QStringList> cameraPar;
+
+    ///
+    /// \brief audioPar 音频参数
+    ///
+    QMap<int,QStringList> audioPar;
     
     ///
     /// \brief winIDMap 视频播放句柄
@@ -141,6 +152,11 @@ private:
     /// \brief timerMap 定时恢复显示屏定时器组
     ///
     QMap<int,QTimer*> timerMap;
+
+    ///
+    /// \brief plateLiftMap 判断已抬杆的车牌
+    ///
+    QMap<int,QString> plateLiftMap;
 
     ///
     /// \brief db 白名单数据库对象
@@ -222,6 +238,13 @@ signals:
     /// \param data
     ///
     void signalSendAudio(int channel,QByteArray data);
+
+    ///
+    /// \brief toSendDataSignal 发送音频数据
+    /// \param channel_number
+    /// \param data
+    ///
+    void toSendDataSignal(int channel_number,const QString &data);
 
 private slots:
 
