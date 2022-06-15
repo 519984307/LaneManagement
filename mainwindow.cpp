@@ -334,7 +334,7 @@ void MainWindow::on_actionLifting_triggered()
 
 void MainWindow::on_actionPlay_triggered()
 {
-    emit signalDoSomething(this->comboBox->currentIndex()+1,2,0);
+    emit signalDoSomething(this->comboBox->currentIndex()+1,2,winIDMap.value(this->comboBox->currentIndex()+1));
 }
 
 void MainWindow::on_actionLogin_triggered()
@@ -344,7 +344,7 @@ void MainWindow::on_actionLogin_triggered()
 
 void MainWindow::on_actionClose_triggered()
 {
-    emit signalDoSomething(this->comboBox->currentIndex()+1,3,winIDMap.value(this->comboBox->currentIndex()+1));
+    emit signalDoSomething(this->comboBox->currentIndex()+1,3,0);
 }
 
 void MainWindow::on_actionSetting_triggered()
@@ -520,7 +520,14 @@ void MainWindow::slotTimerWhite()
 
 void MainWindow::slotPlateWhite(QStringList plateList)
 {
-    this->plateList=plateList;
+    if(plateList.length()>0){
+        this->plateList=plateList;
+
+        for (int i=0;i<plateList.length();i++) {
+            qDebug().noquote()<<QString("WhiteList:%1-%2").arg(QString::number(i),plateList.at(i));
+        }
+    }
+
 //    if(plateList.length()!=0){
 //         localWhilte=false;
 //    }
@@ -704,7 +711,7 @@ void MainWindow::sendRs485Data(QString plate,int channel)
     QString wg=QString::fromLocal8Bit("内部车辆，请通行！");
     QString lg=QString::fromLocal8Bit("临时车辆，人工处理！");
     QString msgR="";
-    QStringList msgList;
+    QStringList msgList;    
 
     if(!localWhilte){
         if(plateList.indexOf(plate)!=-1){
@@ -734,7 +741,7 @@ void MainWindow::sendRs485Data(QString plate,int channel)
             msgList.append(lg);
         }
     }
-    else {
+    if(localWhilte || plateList.length()==0) {
         QString ValidTime="";
         bool Blacklist=false;
         bool Validity=true;

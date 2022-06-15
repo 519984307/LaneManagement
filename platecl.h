@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QWidget>
 #include <QtConcurrent>
+#include <QTimer>
 
 #include "inc/VzLPRClientSDK.h"
 #include "inc/VzLPRClientSDK_WhiteListDefine.h"
@@ -44,6 +45,11 @@ public:
 private:
     
     static PlateCL* pThis;   
+
+    ///
+    /// \brief timerLink 重连定时器
+    ///
+    QTimer* timerLink;
         
     ///
     /// \brief imgPath 图片路径
@@ -63,17 +69,7 @@ private:
     ///
     /// \brief ret 初始化状态
     ///
-    int ret;
-    
-    /*****************************
-    * @brief:登录句柄
-    ******************************/
-    int handle1,handle2,handle3,handle4,handle5,handle6;
-    
-    /*****************************
-    * @brief:播放句柄
-    ******************************/
-    int rHandle1,rHandle2,rHandle3,rHandle4,rHandle5,rHandle6;
+    int ret;   
 
     QList<int> handList;
 
@@ -93,23 +89,30 @@ private:
     /// \brief initializingCamera 初始化相机
     ///
     void initializingCamera();    
-
-    ///
-    /// \brief loginCamera 登录相机
-    /// \param key
-    ///
-    void loginCamera(int key);
     
     ///
     /// \brief resumeShows 恢复显示屏默认显示
     ///
     void resumeShows();
+
+    ///
+    /// \brief loginCamer
+    /// \param channel
+    ///
+    void loginCamer(int channel);
     
     /*****************************
     * @brief:字符串转换16进制
     ******************************/
     QByteArray hexStringtoByteArray(QString hex);
     void formatString(QString &org, int n, const QChar &ch);
+
+private slots:
+
+    ///
+    /// \brief slotTimerLinkCamera 定时重连相机
+    ///
+    void slotTimerLinkCamera();
     
 public slots:
     

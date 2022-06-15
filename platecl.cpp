@@ -10,48 +10,29 @@ PlateCL::PlateCL(QMap<int, QStringList> cameraPar, QString imgPath)
     this->imgPath=imgPath;
        
     ret=-1;
-    handle1=0;
-    handle2=0;
-    handle3=0;
-    handle4=0;
-    handle5=0;
-    handle6=0;
-    rHandle1=0;
-    rHandle2=0;
-    rHandle3=0;
-    rHandle4=0;
-    rHandle5=0;
-    rHandle6=0;
     cameraPort=80;        
-
-    handList<<handle1<<handle2<<handle3<<handle4<<handle5<<handle6;
     
-    QtConcurrent::run(this,&PlateCL::initializingCamera);
+    timerLink=new QTimer(this);
+    connect(timerLink,&QTimer::timeout,this,&PlateCL::slotTimerLinkCamera);
+    timerLink->start(20000);
+
+    QtConcurrent::run(this,&PlateCL::initializingCamera);        
 }
 
 PlateCL::~PlateCL()
 {
     if(ret>0){
-        if(0!=handle1){
-            VzLPRClient_Close(handle1);
-        }
-        if(0!=handle2){
-            VzLPRClient_Close(handle2);
-        }
-        if(0!=handle3){
-            VzLPRClient_Close(handle3);
-        }
-        if(0!=handle4){
-            VzLPRClient_Close(handle4);
-        }
-        if(0!=handle5){
-            VzLPRClient_Close(handle5);
-        }
-        if(0!=handle6){
-            VzLPRClient_Close(handle6);
+        foreach(auto hand,handMap.values()){
+            VzLPRClient_Close(hand);
         }
         VzLPRClient_Cleanup();
     }
+
+//    if(timerLink){
+//        timerLink->stop();
+//        delete timerLink;
+//        timerLink=nullptr;
+//    }
 }
 
 void PlateCL::CommonNotityCallBack(VzLPRClientHandle handle, void *pUserData, VZ_LPRC_COMMON_NOTIFY eNotify, const char *pStrDetail)
@@ -126,110 +107,85 @@ void PlateCL::initializingCamera()
 
     
     if(!cameraPar.value(1).at(0).isEmpty()){
-        handle1 = VzLPRClient_OpenEx(cameraPar.value(1).at(0).toLatin1().data(),80,cameraPar.value(1).at(1).toLatin1().data(),cameraPar.value(1).at(2).toLatin1().data(),0);
+        int handle1 = VzLPRClient_OpenEx(cameraPar.value(1).at(0).toLatin1().data(),80,cameraPar.value(1).at(1).toLatin1().data(),cameraPar.value(1).at(2).toLatin1().data(),0);
         if(0==handle1){
             qWarning().noquote()<<QString("Camera login failure<%1>").arg(cameraPar.value(1).at(0));
         }
         else {            
-            handMap.insert(1,handle1);
             qWarning().noquote()<<QString("Camera login succeeded<%1>").arg(cameraPar.value(1).at(0));
             if(0==VzLPRClient_SetPlateInfoCallBack(handle1,PlateCL::PlateInfoCallBack,nullptr,1)){
                 qInfo().noquote()<<QString("VzLPRClient_SetPlateInfoCallBack set succeeded<%1>").arg(cameraPar.value(1).at(0));
             }
         }
+        handMap.insert(1,handle1);
     }
     if(!cameraPar.value(2).at(0).isEmpty()){
-        handle2 = VzLPRClient_OpenEx(cameraPar.value(2).at(0).toLatin1().data(),80,cameraPar.value(2).at(1).toLatin1().data(),cameraPar.value(2).at(2).toLatin1().data(),0);
+        int handle2 = VzLPRClient_OpenEx(cameraPar.value(2).at(0).toLatin1().data(),80,cameraPar.value(2).at(1).toLatin1().data(),cameraPar.value(2).at(2).toLatin1().data(),0);
         if(0==handle2){
             qWarning().noquote()<<QString("Camera login failure<%1>").arg(cameraPar.value(2).at(0));
         }
         else {
-            handMap.insert(2,handle2);
             qWarning().noquote()<<QString("Camera login succeeded<%1>").arg(cameraPar.value(2).at(0));
             if(0==VzLPRClient_SetPlateInfoCallBack(handle2,PlateCL::PlateInfoCallBack,nullptr,1)){
                 qInfo().noquote()<<QString("VzLPRClient_SetPlateInfoCallBack set succeeded<%1>").arg(cameraPar.value(2).at(0));
             }
         }
+        handMap.insert(2,handle2);
     }
     if(!cameraPar.value(3).at(0).isEmpty()){
-        handle3 = VzLPRClient_OpenEx(cameraPar.value(3).at(0).toLatin1().data(),80,cameraPar.value(3).at(1).toLatin1().data(),cameraPar.value(3).at(2).toLatin1().data(),0);
+        int handle3 = VzLPRClient_OpenEx(cameraPar.value(3).at(0).toLatin1().data(),80,cameraPar.value(3).at(1).toLatin1().data(),cameraPar.value(3).at(2).toLatin1().data(),0);
         if(0==handle3){
             qWarning().noquote()<<QString("Camera login failure<%1>").arg(cameraPar.value(3).at(0));
         }
         else {
-            handMap.insert(3,handle3);
             qWarning().noquote()<<QString("Camera login succeeded<%1>").arg(cameraPar.value(3).at(0));
             if(0==VzLPRClient_SetPlateInfoCallBack(handle3,PlateCL::PlateInfoCallBack,nullptr,1)){
                 qInfo().noquote()<<QString("VzLPRClient_SetPlateInfoCallBack set succeeded<%1>").arg(cameraPar.value(3).at(0));
             }
         }
+        handMap.insert(3,handle3);
     }
     if(!cameraPar.value(4).at(0).isEmpty()){
-        handle4 = VzLPRClient_OpenEx(cameraPar.value(4).at(0).toLatin1().data(),80,cameraPar.value(4).at(1).toLatin1().data(),cameraPar.value(4).at(2).toLatin1().data(),0);
+        int handle4 = VzLPRClient_OpenEx(cameraPar.value(4).at(0).toLatin1().data(),80,cameraPar.value(4).at(1).toLatin1().data(),cameraPar.value(4).at(2).toLatin1().data(),0);
         if(0==handle4){
             qWarning().noquote()<<QString("Camera login failure<%1>").arg(cameraPar.value(4).at(0));
         }
         else {
-            handMap.insert(4,handle4);
             qWarning().noquote()<<QString("Camera login succeeded<%1>").arg(cameraPar.value(4).at(0));
             if(0==VzLPRClient_SetPlateInfoCallBack(handle4,PlateCL::PlateInfoCallBack,nullptr,1)){
                 qInfo().noquote()<<QString("VzLPRClient_SetPlateInfoCallBack set succeeded<%1>").arg(cameraPar.value(4).at(0));
             }
         }
+        handMap.insert(4,handle4);
     }
     if(!cameraPar.value(5).at(0).isEmpty()){
-        handle5 = VzLPRClient_OpenEx(cameraPar.value(5).at(0).toLatin1().data(),80,cameraPar.value(5).at(1).toLatin1().data(),cameraPar.value(5).at(2).toLatin1().data(),0);
+        int handle5 = VzLPRClient_OpenEx(cameraPar.value(5).at(0).toLatin1().data(),80,cameraPar.value(5).at(1).toLatin1().data(),cameraPar.value(5).at(2).toLatin1().data(),0);
         if(0==handle5){
             qWarning().noquote()<<QString("Camera login failure<%1>").arg(cameraPar.value(5).at(0));
         }
         else {
-            handMap.insert(5,handle5);
             qWarning().noquote()<<QString("Camera login succeeded<%1>").arg(cameraPar.value(5).at(0));
             if(0==VzLPRClient_SetPlateInfoCallBack(handle5,PlateCL::PlateInfoCallBack,nullptr,1)){
                 qInfo().noquote()<<QString("VzLPRClient_SetPlateInfoCallBack set succeeded<%1>").arg(cameraPar.value(5).at(0));
             }
         }
+        handMap.insert(5,handle5);
     }
     if(!cameraPar.value(6).at(0).isEmpty()){
-        handle6 = VzLPRClient_OpenEx(cameraPar.value(6).at(0).toLatin1().data(),80,cameraPar.value(6).at(1).toLatin1().data(),cameraPar.value(6).at(2).toLatin1().data(),0);
+        int handle6 = VzLPRClient_OpenEx(cameraPar.value(6).at(0).toLatin1().data(),80,cameraPar.value(6).at(1).toLatin1().data(),cameraPar.value(6).at(2).toLatin1().data(),0);
         if(0==handle6){
             qWarning().noquote()<<QString("Camera login failure<%1>").arg(cameraPar.value(6).at(0));
         }
         else {
-            handMap.insert(6,handle6);
             qWarning().noquote()<<QString("Camera login succeeded<%1>").arg(cameraPar.value(6).at(0));
             if(0==VzLPRClient_SetPlateInfoCallBack(handle6,PlateCL::PlateInfoCallBack,nullptr,1)){
                 qInfo().noquote()<<QString("VzLPRClient_SetPlateInfoCallBack set succeeded<%1>").arg(cameraPar.value(6).at(0));
             }
         }
+        handMap.insert(6,handle6);
     }
 
     QtConcurrent::run(this,&PlateCL::resumeShows);
-
-//    for (int i=1;i<=6;i++) {
-//        if(handMap.value(i,0)==0){
-//            loginCamera(i);
-//        }
-//    }
-}
-
-void PlateCL::loginCamera(int key)
-{
-    if(!cameraPar.value(key).at(0).isEmpty()){
-        handList[key] = VzLPRClient_OpenEx(cameraPar.value(key).at(0).toLatin1().data(),80,cameraPar.value(key).at(1).toLatin1().data(),cameraPar.value(key).at(2).toLatin1().data(),0);
-        if(0==handList[key]){
-            qWarning().noquote()<<QString("Camera login failure<%1>").arg(cameraPar.value(key).at(0));
-
-            QtConcurrent::run(this,&PlateCL::loginCamera,key);
-        }
-        else {
-            handMap.insert(key,handList[key]);
-            qWarning().noquote()<<QString("Camera login succeeded<%1>").arg(cameraPar.value(key).at(0));
-            if(0==VzLPRClient_SetPlateInfoCallBack(handle6,PlateCL::PlateInfoCallBack,nullptr,1)){
-                qInfo().noquote()<<QString("VzLPRClient_SetPlateInfoCallBack set succeeded<%1>").arg(cameraPar.value(key).at(0));
-            }
-        }
-    }
 }
 
 void PlateCL::slotUgWhiteList(QMap<int, QMap<QString, QString> > wlst)
@@ -382,6 +338,23 @@ void PlateCL::resumeShows()
     }
 }
 
+void PlateCL::loginCamer(int channel)
+{
+    if(!cameraPar.value(channel).at(0).isEmpty() && handMap.value(channel,0)==0){
+        int handle = VzLPRClient_OpenEx(cameraPar.value(channel).at(0).toLatin1().data(),80,cameraPar.value(channel).at(1).toLatin1().data(),cameraPar.value(channel).at(2).toLatin1().data(),0);
+        if(0==handle){
+            qWarning().noquote()<<QString("Camera login failure<%1>").arg(cameraPar.value(channel).at(0));
+        }
+        else {
+            qWarning().noquote()<<QString("Camera login succeeded<%1>").arg(cameraPar.value(channel).at(0));
+            if(0==VzLPRClient_SetPlateInfoCallBack(handle,PlateCL::PlateInfoCallBack,nullptr,1)){
+                qInfo().noquote()<<QString("VzLPRClient_SetPlateInfoCallBack set succeeded<%1>").arg(cameraPar.value(channel).at(0));
+            }
+        }
+        handMap.insert(channel,handle);
+    }
+}
+
 void PlateCL::slotPushShow(int channel, QByteArray arr,int type)
 {
     if(type==0){
@@ -422,6 +395,13 @@ void PlateCL::slotPushShow(int channel, QByteArray arr,int type)
 
 void PlateCL::slotDoSomething(int channel, int type, quintptr Wid)
 {
+    /*****************************
+    * @brief:登录失败，什么都不处理
+    ******************************/
+    if(handMap.value(channel)==0){
+        return;
+    }
+
     if(type==0){
         int rt = VzLPRClient_ForceTriggerEx(handMap.value(channel));
         if(-1!=rt){
@@ -440,28 +420,40 @@ void PlateCL::slotDoSomething(int channel, int type, quintptr Wid)
             qWarning().noquote()<<QString("%1:Lifting door failed errCode<%2>").arg(cameraPar.value(channel).at(0),QString::number(VzLPRClient_GetLastError()));
         }
     }
-    else if (type==2) {
+    else if (type==2 && rHandMap.value(channel,-1)==-1) {
         int rt = VzLPRClient_StartRealPlay(handMap.value(channel),reinterpret_cast<HWND>(Wid));
         if(-1!=rt){
-            rHandMap[channel]=rt;
             qInfo().noquote()<<QString("%1:Open video succeeded").arg(cameraPar.value(channel).at(0));
         }
         else {
             qWarning().noquote()<<QString("%1:Open video failed errCode<%2>").arg(cameraPar.value(channel).at(0),QString::number(VzLPRClient_GetLastError()));
         }
+        rHandMap.insert(channel,rt); //[channel]=rt;
     }
-    else if (type==3) {
+    else if (type==3 && rHandMap.value(channel,-1)!=-1) {
         int rt = VzLPRClient_StopRealPlay(rHandMap.value(channel));
         if(-1!=rt){
-            rHandMap[channel]=rt;
             qInfo().noquote()<<QString("%1:Close video succeeded").arg(cameraPar.value(channel).at(0));
+            rHandMap.insert(channel,-1); //[channel]=rt;
         }
         else {
             qWarning().noquote()<<QString("%1:Close video failed errCode<%2>").arg(cameraPar.value(channel).at(0),QString::number(VzLPRClient_GetLastError()));
         }
     }
     else if (type==4) {
-        if(0 == VzLPRClient_Close(handMap.value(channel))){
+        if(handMap.value(channel,0)!=0){
+            if(0 == VzLPRClient_Close(handMap.value(channel))){
+                int rt = VzLPRClient_OpenEx(cameraPar.value(channel).at(0).toLatin1().data(),80,cameraPar.value(channel).at(1).toLatin1().data(),cameraPar.value(channel).at(2).toLatin1().data(),0);
+                if(rt!=0){
+                    handMap[channel]=rt;
+                    qInfo().noquote()<<QString("%1:Camera login succeeded").arg(cameraPar.value(channel).at(0));
+                }
+                else {
+                    qWarning().noquote()<<QString("%2:Camera login failed errCode<%2>").arg(cameraPar.value(channel).at(0),QString::number(VzLPRClient_GetLastError()));
+                }
+            }
+        }
+        else {
             int rt = VzLPRClient_OpenEx(cameraPar.value(channel).at(0).toLatin1().data(),80,cameraPar.value(channel).at(1).toLatin1().data(),cameraPar.value(channel).at(2).toLatin1().data(),0);
             if(rt!=0){
                 handMap[channel]=rt;
@@ -471,9 +463,10 @@ void PlateCL::slotDoSomething(int channel, int type, quintptr Wid)
                 qWarning().noquote()<<QString("%2:Camera login failed errCode<%2>").arg(cameraPar.value(channel).at(0),QString::number(VzLPRClient_GetLastError()));
             }
         }
+
     }
     else {
-        qWarning().noquote()<<QString("this->comboBox->currentIndex()+1");
+        qWarning().noquote()<<QString("Error operating camera parameters");
     }
 }
 
@@ -508,5 +501,16 @@ void PlateCL::formatString(QString &org,int n=2,const QChar &ch=QChar(' '))
     {
         org.insert(pos,ch);
     }
+}
+
+void PlateCL::slotTimerLinkCamera()
+{
+    foreach (auto channel, handMap.keys()) {
+        if(!cameraPar.value(channel).at(0).isEmpty() && handMap.value(channel,0)==0){
+            QtConcurrent::run(this,&PlateCL::loginCamer,channel);
+        }
+
+    }
+
 }
 
