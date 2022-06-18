@@ -548,11 +548,11 @@ void MainWindow::slotContainerData(QString data)
     qDebug().noquote()<<QString("Process container number data:%1").arg(data);
     
     locker.lockForRead();
-    /* "5,[C|20220610215141|05|0|WDFU1234567|Y|22G1|粤B050CS|黄],在场的车辆,1" */
-    /* "3,[C|20220614100702|03|2||N||N|22G1|22G1|吉CB7351|黄],验证成功,0" */
+    /* "5@[C|20220610215141|05|0|WDFU1234567|Y|22G1|粤B050CS|黄]@在场的车辆@1" */
+    /* "3@[C|20220614100702|03|2||N||N|22G1|22G1|吉CB7351|黄]@验证成功@0" */
 
-    QStringList tmpL=data.split(",");
-    if(tmpL.length()!=4){
+    QStringList tmpL=data.split("@");
+    if(tmpL.length()<4){
         qCritical().noquote()<<QString("The parsed data is abnormal, and the parameters do not meet the requirements");
         return;
     }
