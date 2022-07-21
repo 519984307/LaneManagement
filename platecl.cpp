@@ -75,6 +75,19 @@ int PlateCL::PlateInfoCallBack(VzLPRClientHandle handle, void *pUserData, const 
         return 1;
     }
 
+    QString plate=QString::fromLocal8Bit(pResult->license);
+    QString false_plate="1";
+    int I=-1;
+    int S= plate.indexOf(false_plate);
+    if(S!=-1){
+        I= plate.indexOf(false_plate,S+1);
+    }
+    int E= plate.lastIndexOf(false_plate);
+    if(S!=E && E!=I){
+        qCritical().noquote()<<QString("Not case：Filtering false license plates");
+        return -1;
+    }
+
     qDebug().noquote()<<QString("License plate recognition results<%1-%2>").arg(QString::fromLocal8Bit(pResult->license),QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss zzz"));
 
     char *buf = new char[1920*1080];
