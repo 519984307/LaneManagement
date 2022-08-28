@@ -25,13 +25,15 @@ PostData::~PostData()
 
 void PostData::replyFinishedSlot(QNetworkReply *reply)
 {
-    if (reply && reply->error() != QNetworkReply::NoError) {
-        qCritical().noquote()<<QString("Data transfer failure<errorCode=%1>").arg(reply->errorString());
-        emit signalPlateWhite(QStringList(""));
+    if(reply){
+        if (reply->error() != QNetworkReply::NoError) {
+            qCritical().noquote()<<QString("Data transfer failure<errorCode=%1>").arg(reply->errorString());
+            emit signalPlateWhite(QStringList(""));
+        }
+        reply->close();
+        reply->abort();
+        reply->deleteLater();
     }
-    reply->close();
-    reply->abort();
-    reply->deleteLater();
 }
 
 void PostData::slot_SslErrors(QList<QSslError> sslErr)

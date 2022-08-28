@@ -518,13 +518,20 @@ void MainWindow::slotTimerWhite()
     emit signalPostData(jsonDoc.toJson(QJsonDocument::Compact));
 }
 
-void MainWindow::slotPlateWhite(QStringList plateList)
+void MainWindow::slotPlateWhite(QStringList plateListL)
 {
-    if(plateList.length()>0){
-        this->plateList=plateList;
+    if(plateListL.size()!=0){
+        this->plateList=plateListL;
 
         for (int i=0;i<plateList.length();i++) {
             qDebug().noquote()<<QString("WhiteList:%1-%2").arg(QString::number(i),plateList.at(i));
+        }
+        localWhilte=false;
+    }
+    else {
+        qDebug().noquote()<<QString("Description Failed to climb the whitelist, and the data was not updated");
+        if(plateListL.size()==0 && plateList.size()==0){
+            localWhilte=true;
         }
     }
 

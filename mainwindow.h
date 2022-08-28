@@ -280,7 +280,7 @@ private slots:
     /// \brief slotPlateWhite 拉取的白名单写入数据库
     /// \param plateList
     ///
-    void slotPlateWhite(QStringList plateList);
+    void slotPlateWhite(QStringList plateListL);
 
     ///
     /// \brief slotContainerData 箱号软件推送的数据
