@@ -641,7 +641,7 @@ void MainWindow::slotContainerData(QString data)
     for(int i=0;i<tmpData.length();i++){
         tmpMsg+=tmpData.at(i)+" ";
     }
-    emit toSendDataSignal(channel,QString("#[v03][s04]%1").arg(tmpMsg));
+    emit toSendDataSignal(channel,QString("#[v10][s4][tc5]%1").arg(tmpMsg));
 
     bool lift=false;
     /*****************************
@@ -862,7 +862,7 @@ void MainWindow::sendRs485Data(QString plate,int channel)
     for(int i=0;i<msgList.length();i++){
         tmpMsg+=msgList.at(i)+" ";
     }
-    emit toSendDataSignal(channel,QString("#[v03][s04]%1").arg(tmpMsg));
+    emit toSendDataSignal(channel,QString("#[v10][s4][tc5]%1").arg(tmpMsg));
 
     /*****************************
     * @brief:推送车牌显示
