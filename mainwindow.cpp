@@ -520,7 +520,7 @@ void MainWindow::slotTimerWhite()
 
 void MainWindow::slotPlateWhite(QStringList plateListL)
 {
-    if(plateListL.size()!=0){
+    if(!plateListL.isEmpty() && !plateListL.at(0).isEmpty()){
         this->plateList=plateListL;
 
         for (int i=0;i<plateList.length();i++) {
@@ -530,7 +530,7 @@ void MainWindow::slotPlateWhite(QStringList plateListL)
     }
     else {
         qDebug().noquote()<<QString("Description Failed to climb the whitelist, and the data was not updated");
-        if(plateListL.size()==0 && plateList.size()==0){
+        if(plateList.size()==0){
             localWhilte=true;
         }
     }
@@ -641,7 +641,7 @@ void MainWindow::slotContainerData(QString data)
     for(int i=0;i<tmpData.length();i++){
         tmpMsg+=tmpData.at(i)+" ";
     }
-    emit toSendDataSignal(channel,QString("#[v10][s4][te5]%1").arg(tmpMsg));
+    emit toSendDataSignal(channel,QString("#[v10][s4][te40]%1").arg(tmpMsg));
 
     bool lift=false;
     /*****************************
@@ -652,11 +652,11 @@ void MainWindow::slotContainerData(QString data)
         lift=true;
     }
     else{
-        if(allOut && carNumber!="_无_" && (channel==2 || channel==3)){
+        if(allOut && carNumber!=QString::fromLocal8Bit("_无_") && (channel==2 || channel==3)){
             //emit signalDoSomething(channel,1,0);
             lift=true;
         }
-        if(allIn && carNumber!="_无_" && (channel==4 || channel==5)){
+        if(allIn && carNumber!=QString::fromLocal8Bit("_无_") && (channel==4 || channel==5)){
             //emit signalDoSomething(channel,1,0);
             lift=true;
         }
@@ -697,12 +697,12 @@ void MainWindow::sendRs485Data(QString plate,int channel)
         }
     }
 
-    if(allOut && plate!="_无_" && (channel==2 || channel==3)){
+    if(allOut && plate!=QString::fromLocal8Bit("_无_") && (channel==2 || channel==3)){
         emit signalDoSomething(channel,1,0);
         lift=true;
     }
 
-    if(allIn && plate!="_无_" && (channel==4 || channel==5 || channel==6)){
+    if(allIn && plate!=QString::fromLocal8Bit("_无_") && (channel==4 || channel==5 || channel==6)){
         emit signalDoSomething(channel,1,0);
         lift=true;
     }
@@ -862,7 +862,7 @@ void MainWindow::sendRs485Data(QString plate,int channel)
     for(int i=0;i<msgList.length();i++){
         tmpMsg+=msgList.at(i)+" ";
     }
-    emit toSendDataSignal(channel,QString("#[v10][s4][te5]%1").arg(tmpMsg));
+    emit toSendDataSignal(channel,QString("#[v10][s4][te40]%1").arg(tmpMsg));
 
     /*****************************
     * @brief:推送车牌显示

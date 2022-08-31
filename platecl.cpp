@@ -341,7 +341,7 @@ void PlateCL::resumeShows()
 
     foreach(auto hand,handMap.values()){
 
-        if(ind<4){
+        if(ind<=3){
             arr=msgOUT.toLatin1();
             arr=hexStringtoByteArray(arr);
         }
