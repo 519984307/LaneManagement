@@ -23,10 +23,9 @@ AudioServer::AudioServer(QObject *parent, QString addr, int port,int channel) : 
     this->addr=addr;
     this->port=port;
 
-    if(addr.isEmpty()){
-        return;
+    if(addr.trimmed()!=""){
+        startLinkSlot();
     }
-    startLinkSlot();
 }
 
 AudioServer::~AudioServer()

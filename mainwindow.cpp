@@ -177,7 +177,7 @@ void MainWindow::initParmeter()
     winIDMap.insert(5,ui->label_5->winId());
     winIDMap.insert(6,ui->label_6->winId());
 
-    QSettings set(QDir::toNativeSeparators("Sys.ini"),QSettings::IniFormat);
+    QSettings set(QDir::toNativeSeparators(QString("%1/Sys.ini").arg(QCoreApplication::applicationDirPath())),QSettings::IniFormat);
     set.setIniCodec("UTF-8");
 
     set.beginGroup("Main");
