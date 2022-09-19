@@ -1,4 +1,4 @@
-#include "lockdialog.h"
+﻿#include "lockdialog.h"
 #include "ui_lockdialog.h"
 
 LockDialog::LockDialog(QWidget *parent) :
@@ -15,11 +15,13 @@ LockDialog::~LockDialog()
 
 void LockDialog::on_buttonBox_accepted()
 {
-    QString path = QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation);
-    QSettings set(QDir::toNativeSeparators(QString("%1/Parment.ini").arg(path)),QSettings::IniFormat);
+    //QString path = QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation);
+    //QSettings set(QDir::toNativeSeparators(QString("%1/Sys.ini").arg(path)),QSettings::IniFormat);
+    QSettings set(QDir::toNativeSeparators(QString("%1/Sys.ini").arg(QCoreApplication::applicationDirPath())),QSettings::IniFormat);
     set.setIniCodec("UTF-8");
-    set.beginGroup("Main");
+    set.beginGroup("Lock");
     QString lock=set.value("lock","123456").toString();
+    set.setValue("lock",lock);
     set.endGroup();
 
     if(ui->lineEdit->text()==lock){
