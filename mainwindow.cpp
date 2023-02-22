@@ -37,12 +37,16 @@ MainWindow::MainWindow(QWidget *parent)
     ******************************/
     timerForWhite=new QTimer(this);
     connect(timerForWhite,&QTimer::timeout,this,&MainWindow::slotTimerWhite);
-    timerForWhite->start(1000*60*10);
+    if(PostWhilte){
+         timerForWhite->start(1000*60*10);
+    }
 
     /*****************************
     * @brief:立即获取白名单一次
     ******************************/
-    slotTimerWhite();
+    if(PostWhilte){
+         slotTimerWhite();
+    }
 
     /*****************************
     * @brief:接收箱号数据
@@ -188,6 +192,7 @@ void MainWindow::initParmeter()
     allIn = set.value("allIn",1).toBool();
     administrativeChannel = set.value("administrativeChannel",0).toBool();
     yellowPlatePass = set.value("yellowPlatePass",1).toBool();
+    PostWhilte = set.value("PostWhilte",0).toBool();
     set.endGroup();
 
     set.beginGroup("Camera1");
@@ -250,6 +255,7 @@ void MainWindow::initParmeter()
     set.setValue("allIn",allIn);
     set.setValue("administrativeChannel",administrativeChannel);
     set.setValue("yellowPlatePass",yellowPlatePass);
+    set.setValue("PostWhilte",PostWhilte);
     set.endGroup();
 
     set.beginGroup("Camera1");

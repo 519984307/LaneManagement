@@ -79,6 +79,11 @@ private:
     bool localWhilte;
 
     ///
+    /// \brief PostWhilte 请求后台白名单
+    ///
+    bool PostWhilte;
+
+    ///
     /// \brief allOut 出闸校验状态
     ///
     bool allOut;
